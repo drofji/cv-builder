@@ -8,7 +8,7 @@ No registration, no ads — just your data and a perfect result.
 ## 🌐 Live Demo
 
 The project is fully functional and available here:  
-👉 **[Open CV Builder on GitHub Pages](https://USERNAME.github.io/REPOSITORY-NAME/)**
+👉 **[Open CV Builder on GitHub Pages](https://drofji.github.io/cv-builder/)**
 
 ---
 
@@ -53,4 +53,4 @@ Easily manage experience, education, and skills sections.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/USERNAME/REPOSITORY-NAME.git
+git clone https://github.com/drofji/cv-builder.git
