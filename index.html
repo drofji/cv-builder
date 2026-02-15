@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV BUILDER PRO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Base Layout */
+        body { 
+            background-color: #f4f7f6; 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .navbar { z-index: 1050; }
+
+        .main-container { 
+            display: flex; 
+            flex: 1; 
+            overflow: hidden; 
+            flex-direction: row; 
+        }
+
+        /* Sidebar Editor */
+        .editor-side { 
+            width: 450px; 
+            overflow-y: auto; 
+            background: white; 
+            border-right: 1px solid #dee2e6; 
+            padding: 20px; 
+        }
+
+        /* Preview Canvas */
+        .preview-side { 
+            flex: 1; 
+            overflow-y: auto; 
+            background: #525659; 
+            padding: 30px; 
+            display: flex;
+            justify-content: center;
+        }
+
+        /* CV Sheet Styling */
+        #cv-render {
+            width: 210mm;
+            min-height: 296mm;
+            padding: 15mm 20mm;
+            background: white;
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .cv-header-title {
+            font-size: 24pt; font-weight: 800; color: #000; text-transform: uppercase;
+            letter-spacing: 3px; border-bottom: 3px solid #000; margin-bottom: 20px; text-align: center;
+        }
+        #cv-render h1 { font-size: 20pt; font-weight: bold; margin: 0; }
+        #cv-render h2 { font-size: 12pt; font-weight: bold; border-bottom: 1.5px solid #000; margin-top: 18px; margin-bottom: 10px; text-transform: uppercase; }
+        .cv-grid { display: grid; grid-template-columns: 140px 1fr; margin-bottom: 12px; }
+        .cv-date { font-weight: bold; font-size: 9pt; color: #333; }
+
+        .cv-photo-container {
+            width: 100px; height: 130px; margin-left: 20px; border: 1px solid #ddd; padding: 2px; flex-shrink: 0;
+        }
+        .cv-photo-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .draggable-card { border: 1px solid #eee; border-radius: 8px; background: #fdfdfd; padding: 12px; margin-bottom: 10px; position: relative; }
+        .drag-handle { cursor: move; color: #adb5bd; display: flex; align-items: center; gap: 5px; font-size: 14px; }
+
+        /* Notifications */
+        #toast-box { position: fixed; top: 20px; right: 20px; z-index: 1100; }
+        .custom-toast { min-width: 200px; padding: 12px 20px; border-radius: 8px; color: white; margin-bottom: 10px; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideIn 0.3s forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Responsive Settings */
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; overflow-y: auto; }
+            .editor-side { width: 100%; overflow-y: visible; border-right: none; }
+            .preview-side { padding: 15px; overflow-x: auto; }
+            
+            /* Fit A4 to mobile screen width */
+            #cv-render { 
+                zoom: 0.42; 
+                margin: 0 auto;
+            }
+
+            .navbar .container-fluid { flex-direction: column; gap: 12px; }
+            .nav-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark shadow-sm py-2">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center gap-2">
+                <span class="navbar-brand fw-bold m-0">CV BUILDER</span>
+                <select id="cvLang" class="form-select form-select-sm w-auto bg-dark text-white border-secondary" onchange="updateUILanguage(); render();">
+                    <option value="de">🇩🇪 DE</option>
+                    <option value="en" selected>🇺🇸 EN</option>
+                </select>
+            </div>
+
+            <div class="nav-actions">
+                <button class="btn btn-primary btn-sm fw-bold" id="btnSave" onclick="saveToDB()">SAVE</button>
+                <select id="cvSelect" class="form-select form-select-sm d-inline-block w-auto" onchange="loadFromSelector()"></select>
+                <button class="btn btn-outline-danger btn-sm" id="btnDel" onclick="deleteCurrentCV()">Del</button>
+                <button class="btn btn-outline-primary btn-sm" id="btnNew" onclick="createNew()">+ New</button>
+                
+                <div class="vr mx-1 text-secondary d-none d-md-block"></div>
+                
+                <button class="btn btn-outline-light btn-sm" id="btnExp" onclick="exportJSON()">Export</button>
+                <label class="btn btn-outline-light btn-sm m-0">
+                    <span id="btnImp">Import</span>
+                    <input type="file" hidden accept=".json" onchange="handleImport(this)">
+                </label>
+                
+                <button class="btn btn-success btn-sm fw-bold shadow-sm" id="btnPdf" onclick="exportPDF()">PDF</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="toast-box"></div>
+
+    <div class="main-container">
+        <aside class="editor-side">
+            <div class="mb-4">
+                <h6 class="text-primary fw-bold text-uppercase small mb-3" id="lblPersonal">Personal Details</h6>
+                <div class="row g-2 mb-2">
+                    <div class="col-6"><input type="text" id="firstName" class="form-control" placeholder="First Name" oninput="render()"></div>
+                    <div class="col-6"><input type="text" id="lastName" class="form-control" placeholder="Last Name" oninput="render()"></div>
+                </div>
+                <textarea id="summary" class="form-control mb-2" rows="3" placeholder="Summary..." oninput="render()"></textarea>
+                <input type="file" class="form-control form-control-sm mb-3" accept="image/*" onchange="handlePhoto(this)">
+            </div>
+
+            <hr>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold m-0" id="lblContacts">Contacts</h6>
+                    <button class="btn btn-link btn-sm p-0 text-decoration-none" id="btnAddContact" onclick="addContact()">+ Add Field</button>
+                </div>
+                <div id="contactInputs"></div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold m-0" id="lblExperience">Experience</h6>
+                    <button class="btn btn-link btn-sm p-0 text-decoration-none" id="btnAddExp" onclick="addEntry('expInputs')">+ Add Work</button>
+                </div>
+                <div id="expInputs"></div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold m-0" id="lblEducation">Education</h6>
+                    <button class="btn btn-link btn-sm p-0 text-decoration-none" id="btnAddEdu" onclick="addEntry('eduInputs')">+ Add Education</button>
+                </div>
+                <div id="eduInputs"></div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold m-0" id="lblSkills">Skills</h6>
+                    <button class="btn btn-link btn-sm p-0 text-decoration-none" id="btnAddSkill" onclick="addSkill()">+ Add Skill</button>
+                </div>
+                <div id="skillsInputs"></div>
+            </div>
+        </aside>
+
+        <main class="preview-side">
+            <div id="cv-render"></div>
+        </main>
+    </div>
+
+    <script>
+        let db;
+        let currentId = null;
+        let photoBase64 = "";
+
+        const langPack = {
+            en: {
+                cvTitle: "Curriculum Vitae", present: "Present", expHd: "Work Experience", eduHd: "Education", skillsHd: "Skills & Languages",
+                saved: "Saved!", imported: "JSON Loaded!",
+                lblPersonal: "Personal Details", lblContacts: "Contacts", lblExperience: "Experience", lblEducation: "Education", lblSkills: "Skills",
+                btnSave: "SAVE", btnDel: "Del", btnNew: "+ New", btnPdf: "PDF", btnExp: "Export", btnImp: "Import",
+                btnAdd: "+ Add Field", btnAddWork: "+ Add Work", btnAddEdu: "+ Education", btnAddSkill: "+ Skill",
+                phFirst: "First Name", phLast: "Last Name", phSum: "Summary...", phOrg: "Company/School", phTitle: "Title/Degree", phDesc: "Tasks...", phSkill: "Skill"
+            },
+            de: {
+                cvTitle: "Lebenslauf", present: "Heute", expHd: "Berufserfahrung", eduHd: "Bildungsgang", skillsHd: "Kenntnisse",
+                saved: "Gespeichert!", imported: "JSON Geladen!",
+                lblPersonal: "Persönliche Daten", lblContacts: "Kontakt", lblExperience: "Berufserfahrung", lblEducation: "Bildung", lblSkills: "Kenntnisse",
+                btnSave: "SPEICHERN", btnDel: "Löschen", btnNew: "+ Neu", btnPdf: "PDF", btnExp: "Export", btnImp: "Import",
+                btnAdd: "+ Feld", btnAddWork: "+ Job", btnAddEdu: "+ Studium", btnAddSkill: "+ Kenntnis",
+                phFirst: "Vorname", phLast: "Nachname", phSum: "Zusammenfassung...", phOrg: "Firma/Schule", phTitle: "Position", phDesc: "Aufgaben...", phSkill: "Kenntnis"
+            }
+        };
+
+        const levels = ["Beginner", "Intermediate", "Advanced", "Expert", "Native"];
+
+        // DB Setup
+        const request = indexedDB.open("CV_STORAGE_V11", 1);
+        request.onupgradeneeded = e => e.target.result.createObjectStore("cvs", { keyPath: "id", autoIncrement: true });
+        request.onsuccess = e => { db = e.target.result; updateSelector(); updateUILanguage(); render(); };
+
+        function updateUILanguage() {
+            const l = document.getElementById('cvLang').value;
+            const p = langPack[l];
+            ["lblPersonal","lblContacts","lblExperience","lblEducation","lblSkills","btnSave","btnDel","btnNew","btnPdf","btnExp","btnImp"].forEach(id => {
+                if(document.getElementById(id)) document.getElementById(id).innerText = p[id];
+            });
+            document.getElementById('firstName').placeholder = p.phFirst;
+            document.getElementById('lastName').placeholder = p.phLast;
+            document.getElementById('summary').placeholder = p.phSum;
+        }
+
+        // Logic for Data
+        function collectCurrentData() {
+            return {
+                id: currentId || undefined,
+                fn: document.getElementById('firstName').value,
+                ln: document.getElementById('lastName').value,
+                sum: document.getElementById('summary').value,
+                photo: photoBase64,
+                lang: document.getElementById('cvLang').value,
+                contacts: Array.from(document.querySelectorAll('#contactInputs > div')).map(d => ({ t: d.querySelectorAll('input')[0].value, v: d.querySelectorAll('input')[1].value })),
+                exp: Array.from(document.getElementById('expInputs').children).map(d => ({ s: d.querySelector('.e-start').value, e: d.querySelector('.e-end').value, n: d.querySelector('.e-now').checked, t: d.querySelector('.e-title').value, o: d.querySelector('.e-org').value, d: d.querySelector('.e-desc').value })),
+                edu: Array.from(document.getElementById('eduInputs').children).map(d => ({ s: d.querySelector('.e-start').value, e: d.querySelector('.e-end').value, n: d.querySelector('.e-now').checked, t: d.querySelector('.e-title').value, o: d.querySelector('.e-org').value, d: d.querySelector('.e-desc').value })),
+                skills: Array.from(document.getElementById('skillsInputs').children).map(d => ({ n: d.querySelector('input').value, l: d.querySelector('select').value }))
+            };
+        }
+
+        function exportJSON() {
+            const data = collectCurrentData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `CV_${data.ln || 'Backup'}.json`;
+            a.click();
+        }
+
+        function handleImport(input) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    loadDataToForm(data);
+                    showToast(langPack[data.lang || 'en'].imported);
+                } catch(err) { alert("Invalid JSON file"); }
+            };
+            if(input.files[0]) reader.readAsText(input.files[0]);
+        }
+
+        function render() {
+            const l = document.getElementById('cvLang').value;
+            const p = langPack[l];
+            const target = document.getElementById('cv-render');
+
+            let html = `
+                <div class="cv-header-title">${p.cvTitle}</div>
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:20px;">
+                    <div style="flex:1">
+                        <h1>${document.getElementById('firstName').value} ${document.getElementById('lastName').value}</h1>
+                        <div style="font-size:9.5pt; margin-top:5px;">
+                            ${Array.from(document.querySelectorAll('#contactInputs > div')).map(d => {
+                                const ins = d.querySelectorAll('input'); 
+                                return ins[1]?.value ? `<strong>${ins[0].value}:</strong> ${ins[1].value}` : '';
+                            }).filter(s => s).join(' | ')}
+                        </div>
+                    </div>
+                    ${photoBase64 ? `<div class="cv-photo-container"><img src="${photoBase64}"></div>` : ''}
+                </div>
+                <div style="font-size:10pt; margin-bottom:20px; white-space:pre-wrap;">${document.getElementById('summary').value}</div>
+            `;
+
+            [{ t: p.expHd, id: 'expInputs' }, { t: p.eduHd, id: 'eduInputs' }].forEach(sec => {
+                const items = Array.from(document.getElementById(sec.id).children);
+                if(items.length > 0) {
+                    html += `<h2>${sec.t}</h2>`;
+                    items.forEach(item => {
+                        const sV = item.querySelector('.e-start').value;
+                        const eV = item.querySelector('.e-end').value;
+                        const now = item.querySelector('.e-now').checked;
+                        const fmtDate = (v) => v ? v.split('-').reverse().slice(1).join('.') : "";
+                        html += `
+                            <div class="cv-grid">
+                                <div class="cv-date">${fmtDate(sV)} – ${now ? p.present : fmtDate(eV)}</div>
+                                <div>
+                                    <div style="font-weight:bold">${item.querySelector('.e-title').value}</div>
+                                    <div style="color:#555">${item.querySelector('.e-org').value}</div>
+                                    <div style="white-space:pre-wrap; font-size:9.5pt; margin-top:3px;">${item.querySelector('.e-desc').value}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+
+            const sk = Array.from(document.querySelectorAll('#skillsInputs .draggable-card')).map(d => {
+                const name = d.querySelector('input').value;
+                return name ? `<strong>${name}</strong> (${d.querySelector('select').value})` : '';
+            }).filter(s => s).join(', ');
+            if(sk) html += `<h2>${p.skillsHd}</h2><div style="font-size:10pt;">${sk}</div>`;
+            target.innerHTML = html;
+        }
+
+        // Form Utils
+        function addContact(type = "Email", val = "") {
+            const div = document.createElement('div');
+            div.className = "draggable-card p-2 d-flex gap-1 align-items-center mb-2";
+            div.innerHTML = `<div class="drag-handle">⠿</div><input type="text" value="${type}" class="form-control form-control-sm w-25 fw-bold" oninput="render()"><input type="text" value="${val}" class="form-control form-control-sm flex-grow-1" oninput="render()"><button onclick="this.parentElement.remove(); render()" class="btn btn-sm text-danger">×</button>`;
+            document.getElementById('contactInputs').appendChild(div);
+            render();
+        }
+
+        function addEntry(targetId, data = {}) {
+            const p = langPack[document.getElementById('cvLang').value];
+            const card = document.createElement('div');
+            card.className = "draggable-card shadow-sm mb-3";
+            card.innerHTML = `
+                <div class="d-flex justify-content-end mb-2 border-bottom pb-1"><button onclick="this.closest('.draggable-card').remove(); render()" class="btn btn-sm text-danger p-0">✕</button></div>
+                <div class="row g-2 mb-2">
+                    <div class="col-6"><input type="date" class="form-control form-control-sm e-start" value="${data.s || ''}" oninput="render()"></div>
+                    <div class="col-6"><input type="date" class="form-control form-control-sm e-end" value="${data.e || ''}" oninput="render()"></div>
+                </div>
+                <div class="mb-2 small"><input type="checkbox" class="e-now" ${data.n ? 'checked' : ''} onchange="render()"> ${p.present}</div>
+                <input type="text" placeholder="${p.phTitle}" class="form-control form-control-sm fw-bold mb-1 e-title" value="${data.t || ''}" oninput="render()">
+                <input type="text" placeholder="${p.phOrg}" class="form-control form-control-sm mb-1 e-org" value="${data.o || ''}" oninput="render()">
+                <textarea class="form-control form-control-sm e-desc" rows="2" placeholder="${p.phDesc}" oninput="render()">${data.d || ''}</textarea>
+            `;
+            document.getElementById(targetId).appendChild(card);
+            render();
+        }
+
+        function addSkill(name = "", level = "Intermediate") {
+            const p = langPack[document.getElementById('cvLang').value];
+            const card = document.createElement('div');
+            card.className = "draggable-card p-2 d-flex align-items-center gap-2 mb-2";
+            card.innerHTML = `<div class="drag-handle">⠿</div><input type="text" value="${name}" class="form-control form-control-sm flex-grow-1" placeholder="${p.phSkill}" oninput="render()"><select class="form-select form-select-sm w-auto s-lvl" onchange="render()">${levels.map(lv => `<option value="${lv}" ${level===lv?'selected':''}>${lv}</option>`).join('')}</select><button onclick="this.closest('.draggable-card').remove(); render()" class="btn btn-sm text-danger px-1">✕</button>`;
+            document.getElementById('skillsInputs').appendChild(card);
+            render();
+        }
+
+        function saveToDB() {
+            const data = collectCurrentData();
+            db.transaction("cvs", "readwrite").objectStore("cvs").put(data).onsuccess = e => {
+                currentId = e.target.result; updateSelector(); showToast(langPack[data.lang].saved);
+            };
+        }
+
+        function loadDataToForm(d) {
+            currentId = d.id || null;
+            document.getElementById('firstName').value = d.fn || "";
+            document.getElementById('lastName').value = d.ln || "";
+            document.getElementById('summary').value = d.sum || "";
+            document.getElementById('cvLang').value = d.lang || "en";
+            photoBase64 = d.photo || "";
+            document.getElementById('contactInputs').innerHTML = ""; (d.contacts||[]).forEach(c => addContact(c.t, c.v));
+            document.getElementById('expInputs').innerHTML = ""; (d.exp||[]).forEach(x => addEntry('expInputs', x));
+            document.getElementById('eduInputs').innerHTML = ""; (d.edu||[]).forEach(x => addEntry('eduInputs', x));
+            document.getElementById('skillsInputs').innerHTML = ""; (d.skills||[]).forEach(s => addSkill(s.n, s.l));
+            updateUILanguage();
+            render();
+        }
+
+        function updateSelector() {
+            db.transaction("cvs").objectStore("cvs").getAll().onsuccess = e => {
+                document.getElementById('cvSelect').innerHTML = '<option value="">History</option>' + e.target.result.map(cv => `<option value="${cv.id}">${cv.fn} ${cv.ln}</option>`).join('');
+            };
+        }
+
+        function loadFromSelector() {
+            const id = parseInt(document.getElementById('cvSelect').value);
+            if(id) db.transaction("cvs").objectStore("cvs").get(id).onsuccess = e => loadDataToForm(e.target.result);
+        }
+
+        function exportPDF() {
+            const element = document.getElementById('cv-render');
+            const opt = {
+                margin: 0,
+                filename: `CV_${document.getElementById('lastName').value || 'Export'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        function handlePhoto(input) {
+            const reader = new FileReader();
+            reader.onload = e => { photoBase64 = e.target.result; render(); };
+            if(input.files[0]) reader.readAsDataURL(input.files[0]);
+        }
+
+        function showToast(msg) {
+            const box = document.getElementById('toast-box');
+            const t = document.createElement('div');
+            t.className = `custom-toast bg-success`;
+            t.innerText = msg;
+            box.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
+        }
+
+        function deleteCurrentCV() { 
+            if(currentId && confirm("Delete?")) { 
+                db.transaction("cvs", "readwrite").objectStore("cvs").delete(currentId).onsuccess = () => location.reload(); 
+            } 
+        }
+
+        function createNew() { location.reload(); }
+
+        setTimeout(() => { if(!currentId) { addContact("Phone", ""); addContact("Email", ""); } render(); }, 300);
+    </script>
+</body>
+</html>
