@@ -64,37 +64,72 @@
         .app-footer { background: #fff; border-top: 1px solid #dee2e6; padding: 5px 20px; font-size: 12px; text-align: center; flex-shrink: 0; }
         .app-footer a { color: #0d6efd; text-decoration: none; margin: 0 10px; }
 
+        .navbar .container-fluid {
+            flex-direction: row !important;
+        }
+
         @media (max-width: 991px) {
-            body { overflow: auto; height: auto; }
-            .main-container { flex-direction: column; height: auto; }
-            .editor-side { width: 100%; max-height: 65vh; }
-            .preview-side { width: 100%; padding: 10px; }
+
+            .navbar .container-fluid {
+                flex-direction: column !important;
+            }
+
+            .order-mobile-1 {
+                order: 1;
+            }
+            .order-mobile-2 {
+                order: 2;
+            }
+
+            .border-top-mobile {
+                border-top: 1px solid #eee;
+            }
+            .pt-mobile {
+                padding-top: 8px;
+            }
+
+            .order-mobile-2 .btn-sm,
+            .order-mobile-2 label {
+                padding: 8px 4px;
+                font-size: 11px;
+            }
+
+            .main-container {
+                height: calc(100vh - 110px);
+            }
         }
     </style>
 </head>
 <body>
+    <nav class="navbar px-3 py-2">
+        <div class="container-fluid d-flex flex-column flex-lg-row gap-2 p-0">
 
-    <nav class="navbar px-3">
-        <div class="d-flex align-items-center justify-content-between w-100">
-            <div class="d-flex align-items-center gap-2 flex-grow-1">
-                <span class="fw-bold me-2 text-nowrap">CV BUILDER</span>
-                <div class="input-group input-group-sm" style="max-width: 250px;">
-                    <select id="cvSelect" class="form-select" onchange="loadFromSelector()"></select>
-                    <button class="btn btn-outline-danger" onclick="deleteCurrent()">🗑️</button>
+            <div class="d-flex align-items-center justify-content-between w-100 order-mobile-1">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold text-nowrap d-none d-sm-inline">CV BUILDER</span>
+                    <select id="cvSelect" class="form-select form-select-sm" style="min-width: 140px;" onchange="loadFromSelector()"></select>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCurrent()">🗑️</button>
                 </div>
                 <select id="uiLang" class="form-select form-select-sm w-auto" onchange="changeLang()">
                     <option value="en">English 🇬🇧</option>
                     <option value="de">Deutsch 🇩🇪</option>
                 </select>
             </div>
-            <div class="d-flex gap-2 align-items-center">
-                <button class="btn btn-sm btn-outline-primary fw-bold" data-bs-toggle="offcanvas" data-bs-target="#designPanel">🎨 <span data-i18n="designBtn">DESIGN</span></button>
-                <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="createNew()">+ <span data-i18n="newBtn">NEW</span></button>
-                <label class="btn btn-sm btn-outline-dark fw-bold m-0" style="cursor: pointer;">
-                    IMPORT<input type="file" accept=".json" hidden onchange="handleImport(this)">
-                </label>
-                <button class="btn btn-sm btn-dark fw-bold px-3" data-bs-toggle="modal" data-bs-target="#exportModal" data-i18n="exportBtn">EXPORT</button>
+
+            <div class="d-flex align-items-center justify-content-between w-100 gap-2 order-mobile-2 border-top-mobile pt-mobile">
+                <div class="d-flex gap-1 flex-grow-1">
+                    <button class="btn btn-sm btn-outline-dark flex-fill" onclick="createNew()">📄NEW</button>
+                    <label class="btn btn-sm btn-outline-dark m-0 flex-fill text-center" style="cursor: pointer;">
+                        📥 IMPORT <input type="file" accept=".json" hidden onchange="handleImport(this)">
+                    </label>
+
+                </div>
+                <div class="d-flex gap-1 flex-grow-1 justify-content-end">
+                    <button class="btn btn-sm btn-primary fw-bold flex-fill" data-bs-toggle="offcanvas" data-bs-target="#designPanel">🎨 DESIGN</button>
+                    <button class="btn btn-sm btn-dark fw-bold flex-fill" data-bs-toggle="modal" data-bs-target="#exportModal">💾 SAVE</button>
+                </div>
             </div>
+
         </div>
     </nav>
 
@@ -302,14 +337,23 @@
 
         function fitPreviewToScreen() {
             const pages = document.querySelectorAll('.page-wrapper');
+            const previewSide = document.querySelector('.preview-side');
+            if (!previewSide) return;
+
             if (window.innerWidth >= 992) {
-                pages.forEach(p => { p.style.transform = 'none'; p.style.marginBottom = '20px'; });
+                pages.forEach(p => {
+                    p.style.transform = 'none';
+                    p.style.marginBottom = '20px';
+                });
                 return;
             }
-            const scale = (document.querySelector('.preview-side').offsetWidth - 40) / 794;
+
+            const padding = 20;
+            const scale = (previewSide.offsetWidth - padding) / 794;
+
             pages.forEach(p => {
                 p.style.transform = `scale(${scale})`;
-                p.style.marginBottom = `${(1123 * scale) - 1123 + 20}px`;
+                p.style.marginBottom = `${(1123 * scale) - 1123 + 10}px`;
             });
         }
 
