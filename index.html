@@ -13,51 +13,62 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
     <style>
-        :root { --sidebar-width: 450px; --a4-width: 210mm; --a4-height: 297mm; }
-
-        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-        .navbar { min-height: 60px; border-bottom: 1px solid #dee2e6; background: #fff !important; z-index: 1100; position: relative; }
-        .main-container { height: calc(100vh - 60px); display: flex; }
+        :root { --sidebar-width: 480px; --a4-width: 210mm; --a4-height: 297mm; }
+        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; margin: 0; display: flex; flex-direction: column; }
+        .navbar { min-height: 60px; border-bottom: 1px solid #dee2e6; background: #fff !important; z-index: 1100; position: relative; flex-shrink: 0; }
+        .main-container { flex: 1; display: flex; overflow: hidden; }
         .editor-side { width: var(--sidebar-width); background: white; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; flex-shrink: 0; }
         .editor-scroll-area { flex: 1; overflow-y: auto; padding: 25px; }
-
-        /* Footer styling */
-        .editor-footer { padding: 15px; border-top: 1px solid #eee; background: #f8f9fa; font-size: 0.8rem; text-align: center; }
-        .editor-footer a { color: #666; text-decoration: none; }
-        .editor-footer a:hover { text-decoration: underline; }
-
-        .preview-side { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; background: #525659; }
-
+        .preview-side { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; background: #525659; }
+        #cv-pages-container { width: var(--a4-width); margin: 0 auto; display: block; line-height: 0; }
         .page-wrapper {
             width: var(--a4-width);
-            height: var(--a4-height);
+            height: 296.5mm;
             background: white;
             padding: 15mm;
             position: relative;
             box-sizing: border-box;
             overflow: hidden;
-            margin-bottom: 25px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             transform-origin: top center;
-            transition: transform 0.2s;
+            display: block;
+            line-height: normal;
+            page-break-after: always;
         }
-
-        .section-title { font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #333; margin-top: 15px; margin-bottom: 10px; }
-        .section-continued { font-size: 0.8em; opacity: 0.7; text-transform: none; margin-left: 5px; }
-        .cv-photo-container { overflow: hidden; flex-shrink: 0; background: #f8f9fa; border: 1px solid #eee; }
+        .page-wrapper:last-child { page-break-after: avoid !important; }
+        .page-side-header {
+            position: absolute;
+            left: -140mm;
+            top: 50%;
+            width: 297mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%) rotate(-90deg);
+            font-size: 8pt;
+            opacity: 0.4;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .section-title { font-weight: bold; text-transform: uppercase; margin-top: 15px; margin-bottom: 10px; }
+        .cv-photo-container { overflow: hidden; flex-shrink: 0; background: #f8f9fa; }
         .cv-photo-container img { width: 100%; height: 100%; object-fit: cover; }
         .skills-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; margin: 0 4px 4px 0; font-size: 0.9em; }
         .draggable-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fff; position: relative; }
         .drag-handle { cursor: grab; color: #ccc; margin-right: 10px; font-size: 1.2rem; }
         .cv-main-title { text-align: center; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 5px; font-weight: bold; letter-spacing: 2px; }
+        .mini-preview { width: 38px; height: 38px; border-radius: 4px; object-fit: cover; border: 1px solid #ddd; display: none; }
+        .app-footer { background: #fff; border-top: 1px solid #dee2e6; padding: 5px 20px; font-size: 12px; text-align: center; flex-shrink: 0; }
+        .app-footer a { color: #0d6efd; text-decoration: none; margin: 0 10px; }
 
         @media (max-width: 991px) {
             body { overflow: auto; height: auto; }
-            .navbar { padding: 10px; height: auto; }
             .main-container { flex-direction: column; height: auto; }
-            .editor-side { width: 100%; border-right: none; border-bottom: 1px solid #dee2e6; max-height: 65vh; }
-            .preview-side { width: 100%; padding: 20px 5px; overflow: hidden; }
-            .navbar .d-flex { flex-wrap: wrap; gap: 8px; }
+            .editor-side { width: 100%; max-height: 65vh; }
+            .preview-side { width: 100%; padding: 10px; }
         }
     </style>
 </head>
@@ -67,22 +78,20 @@
         <div class="d-flex align-items-center justify-content-between w-100">
             <div class="d-flex align-items-center gap-2 flex-grow-1">
                 <span class="fw-bold me-2 text-nowrap">CV BUILDER</span>
-                <div class="input-group input-group-sm flex-nowrap" style="max-width: 250px;">
+                <div class="input-group input-group-sm" style="max-width: 250px;">
                     <select id="cvSelect" class="form-select" onchange="loadFromSelector()"></select>
                     <button class="btn btn-outline-danger" onclick="deleteCurrent()">🗑️</button>
                 </div>
                 <select id="uiLang" class="form-select form-select-sm w-auto" onchange="changeLang()">
-                    <option value="en">EN</option>
-                    <option value="de">DE</option>
+                    <option value="en">English 🇬🇧</option>
+                    <option value="de">Deutsch 🇩🇪</option>
                 </select>
             </div>
-
-            <div class="d-flex gap-2 mt-2 mt-lg-0 align-items-center flex-wrap justify-content-end">
-                <button class="btn btn-sm btn-outline-primary fw-bold" data-bs-toggle="offcanvas" data-bs-target="#designPanel">🎨 <span class="d-none d-sm-inline" data-i18n="designBtn">DESIGN</span></button>
-                <div class="vr d-none d-sm-block mx-1"></div>
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-sm btn-outline-primary fw-bold" data-bs-toggle="offcanvas" data-bs-target="#designPanel">🎨 <span data-i18n="designBtn">DESIGN</span></button>
                 <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="createNew()">+ <span data-i18n="newBtn">NEW</span></button>
-                <label class="btn btn-sm btn-outline-dark fw-bold m-0 text-nowrap" style="cursor: pointer;">
-                    IMPORT JSON <input type="file" accept=".json" hidden onchange="handleImport(this)">
+                <label class="btn btn-sm btn-outline-dark fw-bold m-0" style="cursor: pointer;">
+                    IMPORT<input type="file" accept=".json" hidden onchange="handleImport(this)">
                 </label>
                 <button class="btn btn-sm btn-dark fw-bold px-3" data-bs-toggle="modal" data-bs-target="#exportModal" data-i18n="exportBtn">EXPORT</button>
             </div>
@@ -97,9 +106,12 @@
                     <div class="col-6"><input type="text" id="firstName" class="form-control" placeholder="First Name" data-i18n-ph="phName" oninput="render()"></div>
                     <div class="col-6"><input type="text" id="lastName" class="form-control" placeholder="Last Name" data-i18n-ph="phSurname" oninput="render()"></div>
                 </div>
-                <div class="mb-4 d-flex gap-2">
-                    <input type="file" id="photoInput" class="form-control form-control-sm" accept="image/*" onchange="initCropper(this)">
-                    <button id="recropBtn" class="btn btn-sm btn-outline-secondary d-none" onclick="reCropCurrent()" data-i18n="recrop">Recrop</button>
+                <div class="mb-4">
+                    <div class="d-flex gap-2 align-items-center">
+                        <img id="photoThumb" class="mini-preview" src="">
+                        <input type="file" id="photoInput" class="form-control form-control-sm" accept="image/*" onchange="initCropper(this)">
+                        <button id="recropBtn" class="btn btn-sm btn-outline-secondary d-none" onclick="reCropCurrent()" data-i18n="recrop">Recrop</button>
+                    </div>
                 </div>
                 <textarea id="summary" class="form-control mb-4" rows="3" placeholder="Summary..." data-i18n-ph="phSummary" oninput="render()"></textarea>
 
@@ -115,11 +127,6 @@
                 <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold small m-0 text-muted" data-i18n="skills">SKILLS</h6><button class="btn btn-sm p-0 text-primary" onclick="addSkill()">+ <span data-i18n="add">Add</span></button></div>
                 <div id="skillsInputs" class="mb-3 sortable-list"></div>
             </div>
-
-            <div class="editor-footer">
-                Created by <a href="http://github.com/drofji" target="_blank">drofji</a> |
-                <a href="http://github.com/drofji/cv-builder" target="_blank">Source Code</a>
-            </div>
         </aside>
 
         <main class="preview-side">
@@ -127,61 +134,99 @@
         </main>
     </div>
 
+    <footer class="app-footer">
+        <a href="http://github.com/drofji" target="_blank">Created by <b>drofji</b></a> |
+        <a href="http://github.com/drofji/cd-builder" target="_blank">Source code <b>cd-builder</b></a>
+    </footer>
+
     <div class="offcanvas offcanvas-end" id="designPanel">
         <div class="offcanvas-header border-bottom">
-            <h6 class="offcanvas-title fw-bold" data-i18n="designBtn">DESIGN SETTINGS</h6>
+            <h6 class="offcanvas-title fw-bold">DESIGN SETTINGS</h6>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body">
-            <div class="mb-4">
-                <label class="form-label d-flex justify-content-between small fw-bold">
-                    <span data-i18n="textSize">Text Size</span> <span><span id="fontSizeVal">10</span>pt</span>
-                </label>
+            <h6 class="fw-bold small text-muted mb-2">DATE FORMAT</h6>
+            <select id="dateOrder" class="form-select form-select-sm mb-2" onchange="render()">
+                <option value="MY_TEXT">Month (Text) Year</option>
+                <option value="YM_TEXT">Year Month (Text)</option>
+                <option value="MY_NUM">Month (Num) Year</option>
+                <option value="YM_NUM">Year Month (Num)</option>
+                <option value="MY_NUM_NOSEP">MonthYear (No Separator)</option>
+            </select>
+            <select id="dateSep" class="form-select form-select-sm mb-3" onchange="render()">
+                <option value=".">Separator: Dot (.)</option>
+                <option value="/">Separator: Slash (/)</option>
+                <option value="-">Separator: Dash (-)</option>
+                <option value=" ">Separator: Space</option>
+            </select>
+            <hr>
+            <div class="mb-2">
+                <label class="small fw-bold">Text Size: <span id="fontSizeVal">10</span>pt</label>
                 <input type="range" id="fontSize" class="form-range" min="8" max="14" step="0.5" value="10" oninput="document.getElementById('fontSizeVal').innerText=this.value; render()">
             </div>
-            <div class="mb-4">
-                <label class="form-label d-flex justify-content-between small fw-bold">
-                    <span data-i18n="photoWidth">Photo Width</span> <span><span id="photoSizeVal">35</span>mm</span>
-                </label>
+            <div class="mb-2">
+                <label class="small fw-bold">Photo Width: <span id="photoSizeVal">35</span>mm</label>
                 <input type="range" id="photoSize" class="form-range" min="20" max="60" step="1" value="35" oninput="document.getElementById('photoSizeVal').innerText=this.value; render()">
             </div>
+            <div class="mb-3">
+                <label class="small fw-bold">Photo Border: <span id="photoBorderVal">0</span>mm</label>
+                <input type="range" id="photoBorderSize" class="form-range" min="0" max="5" step="0.5" value="0" oninput="document.getElementById('photoBorderVal').innerText=this.value; render()">
+            </div>
             <hr>
+            <h6 class="fw-bold small text-muted mb-2">COLORS</h6>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="small">Accent</label><input type="color" id="accentColor" class="form-control form-control-color w-100" value="#222222" oninput="render()"></div>
+                <div class="col-6"><label class="small">Text</label><input type="color" id="textColor" class="form-control form-control-color w-100" value="#333333" oninput="render()"></div>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="small">Dates</label><input type="color" id="dateColor" class="form-control form-control-color w-100" value="#666666" oninput="render()"></div>
+                <div class="col-6"><label class="small">Details</label><input type="color" id="descColor" class="form-control form-control-color w-100" value="#555555" oninput="render()"></div>
+            </div>
             <div class="row g-2">
-                <div class="col-6">
-                    <label class="small fw-bold" data-i18n="accent">Accent Color</label>
-                    <input type="color" id="accentColor" class="form-control form-control-color w-100" value="#222222" oninput="render()">
-                </div>
-                <div class="col-6">
-                    <label class="small fw-bold" data-i18n="text">Text Color</label>
-                    <input type="color" id="textColor" class="form-control form-control-color w-100" value="#333333" oninput="render()">
-                </div>
+                <div class="col-6"><label class="small">Lines</label><input type="color" id="lineColor" class="form-control form-control-color w-100" value="#333333" oninput="render()"></div>
+                <div class="col-6"><label class="small">Img Border</label><input type="color" id="photoBorderColor" class="form-control form-control-color w-100" value="#eeeeee" oninput="render()"></div>
             </div>
         </div>
     </div>
 
     <div class="modal fade" id="exportModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header">
-                    <h6 class="modal-title fw-bold" data-i18n="exportBtn">EXPORT</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+            <div class="modal-content border-0">
+                <div class="modal-header"><h6 class="modal-title fw-bold">EXPORT</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body d-grid gap-2">
-                    <button class="btn btn-success fw-bold py-2" onclick="exportPDF()">Download PDF</button>
-                    <button class="btn btn-outline-dark py-2" onclick="exportJSON()">Save JSON</button>
+                    <button class="btn btn-success fw-bold" onclick="exportPDF()">PDF</button>
+                    <button class="btn btn-outline-dark" onclick="exportJSON()">JSON</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="ghost-render" style="position: absolute; top: -9999px; width: 180mm; visibility: hidden;"></div>
+    <div id="ghost-render" style="position: absolute; top: -9999px; width: 180mm; visibility: hidden; pointer-events: none;"></div>
+
     <div class="modal fade" id="cropModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 bg-dark text-white">
                 <div class="modal-body p-0" style="height: 500px;"><img id="image-to-crop" style="display: block; max-width: 100%;"></div>
                 <div class="modal-footer border-0">
-                    <button class="btn btn-outline-light" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                    <button class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
                     <button class="btn btn-primary px-4" onclick="applyCrop()">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="starModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center p-4">
+                <div class="mb-3">
+                    <svg height="48" viewBox="0 0 16 16" width="48" style="fill: #24292e;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                </div>
+                <h5 class="fw-bold">Support this project!</h5>
+                <p class="text-muted">If you like this CV Builder, please consider giving it a star on GitHub.</p>
+                <div class="d-grid gap-2">
+                    <a href="https://github.com/drofji/cv-builder" target="_blank" class="btn btn-dark fw-bold" onclick="bootstrap.Modal.getInstance(document.getElementById('starModal')).hide()">⭐ Star on GitHub</a>
+                    <button class="btn btn-link text-decoration-none text-muted" onclick="neverShowStar()">Don't show again</button>
+                    <button class="btn btn-link text-decoration-none text-muted" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -193,26 +238,23 @@
                 designBtn: "DESIGN", newBtn: "NEW", exportBtn: "EXPORT", personalTitle: "Personal Information",
                 phName: "First Name", phSurname: "Last Name", phSummary: "Summary...",
                 contacts: "CONTACTS", experience: "EXPERIENCE", education: "EDUCATION", skills: "SKILLS",
-                add: "Add", recrop: "Recrop", textSize: "Text Size", photoWidth: "Photo Width", accent: "Accent",
-                text: "Text Color", cancel: "Cancel", present: "Present", confirmDelete: "Are you sure you want to delete this CV?",
+                add: "Add", recrop: "Recrop", present: "Present", confirmDelete: "Delete this CV?",
                 months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-                cvTitle: "CURRICULUM VITAE", pageLabel: "Page", cont: "(continued)"
+                cvTitle: "Curriculum Vitae", pageLabel: "Page", cont: "(continued)"
             },
             de: {
                 designBtn: "DESIGN", newBtn: "NEU", exportBtn: "EXPORT", personalTitle: "Persönliche Infos",
                 phName: "Vorname", phSurname: "Nachname", phSummary: "Zusammenfassung...",
-                contacts: "KONTAKTE", experience: "BERUFSERFAHRUNG", education: "AUSBILDUNG", skills: "KENNTNISSE",
-                add: "Hinzufügen", recrop: "Anpassen", textSize: "Schriftgröße", photoWidth: "Fotobreite", accent: "Akzent",
-                text: "Textfarbe", cancel: "Abbrechen", present: "Heute", confirmDelete: "Möchten Sie diesen Lebenslauf wirklich lüschen?",
+                contacts: "KONTAKTE", experience: "BERUFSERFAHRUNG", education: "BILDUNG", skills: "KENNTNISSE",
+                add: "Hinzufügen", recrop: "Anpassen", present: "Heute", confirmDelete: "Löschen?",
                 months: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
-                cvTitle: "LEBENSLAUF", pageLabel: "Seite", cont: "(Fortsetzung)"
+                cvTitle: "Lebenslauf", pageLabel: "Seite", cont: "(Fortsetzung)"
             }
         };
 
-        let db, currentId = null, createdAt = null, photoBase64 = "", originalPhoto = "", cropper, isLoading = false;
+        let db, currentId = null, photoBase64 = "", originalPhoto = "", cropper, isLoading = false;
         const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
 
-        // Initialize IndexedDB
         const request = indexedDB.open("CV_BUILDER_DB_V25", 1);
         request.onupgradeneeded = e => e.target.result.createObjectStore("cvs", { keyPath: "id", autoIncrement: true });
         request.onsuccess = e => { db = e.target.result; loadLast(); };
@@ -229,165 +271,201 @@
             if (!val) return i18n[lang].present;
             const d = new Date(val);
             if (isNaN(d.getTime())) return val;
-            return `${i18n[lang].months[d.getMonth()]} ${d.getFullYear()}`;
-        }
-
-        function render() {
-            const lang = document.getElementById('uiLang').value;
-            const ds = {
-                size: document.getElementById('fontSize').value,
-                pSize: document.getElementById('photoSize').value,
-                accent: document.getElementById('accentColor').value,
-                text: document.getElementById('textColor').value
-            };
-
-            const name = (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value).trim() || "Name";
-            const contactsList = Array.from(document.querySelectorAll('#contactInputs > div')).map(d => d.querySelectorAll('input')[1].value).filter(v => v).join('  •  ');
-            const summary = document.getElementById('summary').value;
-
-            // Data blocks for rendering
-            const blocks = [
-                { type: 'header', html: `<div class="cv-main-title" style="color: ${ds.text}; border-bottom: 3px solid ${ds.accent}">${i18n[lang].cvTitle}</div>` },
-                { type: 'info', html: `
-                <div class="d-flex justify-content-between gap-3 mb-4" style="color: ${ds.text}">
-                    <div style="flex:1">
-                        <h1 class="fw-bold m-0" style="font-size: 2.5em; line-height:1">${name}</h1>
-                        <div class="mt-2 opacity-75 small">${contactsList}</div>
-                        ${summary ? `<div class="section-title" style="color:${ds.accent}; border-color:${ds.accent}">${i18n[lang].personalTitle}</div><div style="white-space:pre-wrap; font-size: 0.95em">${summary}</div>` : ''}
-                    </div>
-                    ${photoBase64 ? `<div class="cv-photo-container" style="width:${ds.pSize}mm; height:${ds.pSize * 1.3}mm"><img src="${photoBase64}"></div>` : ''}
-                </div>`
-            }];
-
-            const sections = [
-                {id: 'expInputs', title: i18n[lang].experience},
-                {id: 'eduInputs', title: i18n[lang].education}
-            ];
-
-            sections.forEach(sec => {
-                const items = Array.from(document.getElementById(sec.id).children);
-                if (items.length) {
-                    items.forEach((it, idx) => {
-                        const dateStr = formatDate(it.querySelector('.e-start').value) + ' — ' + formatDate(it.querySelector('.e-end').value);
-                        const contentHtml = `<div class="row g-0 mb-3" style="color: ${ds.text}"><div class="col-3 small fw-bold opacity-75">${dateStr}</div><div class="col-9 ps-3"><div class="fw-bold">${it.querySelector('.e-title').value}</div><div class="opacity-75 small">${it.querySelector('.e-org').value}</div><div class="mt-1 small" style="white-space:pre-wrap">${it.querySelector('.e-desc').value}</div></div></div>`;
-                        blocks.push({
-                            type: 'entry',
-                            sectionTitle: sec.title,
-                            isFirstInSection: idx === 0,
-                            html: contentHtml
-                        });
-                    });
-                }
-            });
-
-            const skills = Array.from(document.getElementById('skillsInputs').children).map(d => ({ n: d.querySelector('input').value, l: d.querySelector('select').value })).filter(s => s.n);
-            if (skills.length) {
-                const skillsHtml = `<div class="d-flex flex-wrap gap-1">${skills.map(s => `<span class="skills-tag" style="background:${ds.accent}15; color:${ds.text}; border:1px solid ${ds.accent}33"><strong>${s.n}</strong>${s.l ? `: ${s.l}` : ''}</span>`).join('')}</div>`;
-                blocks.push({ type: 'entry', sectionTitle: i18n[lang].skills, isFirstInSection: true, html: skillsHtml });
+            const order = document.getElementById('dateOrder').value;
+            const sep = document.getElementById('dateSep').value;
+            const mText = i18n[lang].months[d.getMonth()];
+            const mNum = (d.getMonth() + 1).toString().padStart(2, '0');
+            const year = d.getFullYear();
+            switch(order) {
+                case 'MY_TEXT': return `${mText}${sep}${year}`;
+                case 'YM_TEXT': return `${year}${sep}${mText}`;
+                case 'MY_NUM': return `${mNum}${sep}${year}`;
+                case 'YM_NUM': return `${year}${sep}${mNum}`;
+                case 'MY_NUM_NOSEP': return `${mNum}${year}`;
+                default: return `${mText} ${year}`;
             }
-
-            // Pagination Logic
-            const container = document.getElementById('cv-pages-container');
-            container.innerHTML = "";
-            let currentPageNum = 1;
-            let currentP = createPage(currentPageNum, ds, i18n[lang].pageLabel);
-            container.appendChild(currentP);
-
-            let activeSectionTitle = "";
-
-            blocks.forEach(b => {
-                const ghost = document.getElementById('ghost-render');
-                ghost.style.fontSize = ds.size + "pt";
-                ghost.innerHTML = "";
-
-                const tempDiv = document.createElement('div');
-                // If start of section, add title to ghost for measurement
-                if (b.type === 'entry' && b.isFirstInSection) {
-                    tempDiv.innerHTML = `<div class="section-title" style="color:${ds.accent}; border-color:${ds.accent}">${b.sectionTitle}</div>` + b.html;
-                } else {
-                    tempDiv.innerHTML = b.html;
-                }
-                ghost.appendChild(tempDiv);
-
-                // If block doesn't fit
-                if (currentP.querySelector('.page-content').offsetHeight + ghost.offsetHeight > 1000) {
-                    currentPageNum++;
-                    currentP = createPage(currentPageNum, ds, i18n[lang].pageLabel);
-                    container.appendChild(currentP);
-
-                    // Duplicate header on new page if continuing a section
-                    if (b.type === 'entry') {
-                        const contHeader = document.createElement('div');
-                        contHeader.className = "section-title";
-                        contHeader.style.color = ds.accent;
-                        contHeader.style.borderColor = ds.accent;
-                        contHeader.innerHTML = `${b.sectionTitle} <span class="section-continued">${i18n[lang].cont}</span>`;
-                        currentP.querySelector('.page-content').appendChild(contHeader);
-                    }
-                }
-
-                // Add section title if it's the first element on current page
-                if (b.type === 'entry' && b.isFirstInSection && activeSectionTitle !== b.sectionTitle) {
-                    const header = document.createElement('div');
-                    header.className = "section-title";
-                    header.style.color = ds.accent;
-                    header.style.borderColor = ds.accent;
-                    header.innerText = b.sectionTitle;
-                    currentP.querySelector('.page-content').appendChild(header);
-                    activeSectionTitle = b.sectionTitle;
-                }
-
-                const content = document.createElement('div');
-                content.innerHTML = b.html;
-                currentP.querySelector('.page-content').appendChild(content);
-            });
-
-            fitPreviewToScreen();
-            autoSave();
         }
 
-        function createPage(n, ds, label) {
-            const w = document.createElement('div'); w.className = "page-wrapper";
+        function createPage(n, ds) {
+            const lang = document.getElementById('uiLang').value;
+            const fn = document.getElementById('firstName').value || '';
+            const ln = document.getElementById('lastName').value || '';
+            const w = document.createElement('div');
+            w.className = "page-wrapper";
             w.style.fontSize = ds.size + "pt";
-            w.innerHTML = `<div class="page-content"></div><div style="position:absolute; bottom:10mm; right:10mm; font-size:8pt; opacity:0.3">${label} ${n}</div>`;
+            w.innerHTML = `
+                <div class="page-side-header" style="color:${ds.text}">${i18n[lang].cvTitle} — ${fn} ${ln}</div>
+                <div class="page-content"></div>
+                <div style="position:absolute; bottom:10mm; right:10mm; font-size:8pt; opacity:0.3; color:${ds.text}">${i18n[lang].pageLabel} ${n}</div>`;
             return w;
         }
 
         function fitPreviewToScreen() {
             const pages = document.querySelectorAll('.page-wrapper');
             if (window.innerWidth >= 992) {
-                pages.forEach(p => { p.style.transform = 'none'; p.style.marginBottom = '25px'; });
+                pages.forEach(p => { p.style.transform = 'none'; p.style.marginBottom = '20px'; });
                 return;
             }
-            const containerWidth = document.querySelector('.preview-side').offsetWidth;
-            const scale = (containerWidth - 20) / 794;
+            const scale = (document.querySelector('.preview-side').offsetWidth - 40) / 794;
             pages.forEach(p => {
                 p.style.transform = `scale(${scale})`;
                 p.style.marginBottom = `${(1123 * scale) - 1123 + 20}px`;
             });
         }
-        window.addEventListener('resize', fitPreviewToScreen);
 
-        // Standard data management functions
+        function getFileName() {
+            const f = document.getElementById('firstName').value || 'CV';
+            const l = document.getElementById('lastName').value || '';
+            const d = new Date().toISOString().split('T')[0];
+            return `CV_${f}_${l}_${d}`;
+        }
+
+        function showStarAfterExport() { if (!localStorage.getItem('cv_builder_no_star')) new bootstrap.Modal(document.getElementById('starModal')).show(); }
+        function neverShowStar() { localStorage.setItem('cv_builder_no_star', 'true'); bootstrap.Modal.getInstance(document.getElementById('starModal')).hide(); }
+
+        function exportPDF() {
+            const pages = document.querySelectorAll('.page-wrapper');
+            const container = document.getElementById('cv-pages-container');
+            pages.forEach(p => {
+                p.style.transform = 'none';
+                p.style.marginBottom = '0';
+                p.style.boxShadow = 'none';
+            });
+            container.style.gap = '0';
+            const opt = {
+                margin: 0,
+                filename: getFileName() + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(container).save().then(() => {
+                pages.forEach(p => { p.style.boxShadow = '0 0 20px rgba(0,0,0,0.5)'; });
+                fitPreviewToScreen();
+                showStarAfterExport();
+            });
+        }
+
+        function render() {
+            if (isLoading) return;
+            const lang = document.getElementById('uiLang').value;
+            const ds = {
+                size: document.getElementById('fontSize').value, pSize: document.getElementById('photoSize').value, pBorder: document.getElementById('photoBorderSize').value,
+                accent: document.getElementById('accentColor').value, text: document.getElementById('textColor').value, date: document.getElementById('dateColor').value,
+                desc: document.getElementById('descColor').value, line: document.getElementById('lineColor').value, pBorderColor: document.getElementById('photoBorderColor').value
+            };
+            const name = (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value).trim() || "Name";
+            const contacts = Array.from(document.querySelectorAll('#contactInputs > div')).map(d => {
+                const label = d.querySelectorAll('input')[0].value;
+                const value = d.querySelectorAll('input')[1].value;
+                return value ? `<strong>${label}:</strong> ${value}` : null;
+            }).filter(v => v).join('  •  ');
+            const summary = document.getElementById('summary').value;
+            const blocks = [
+                { type: 'header', html: `<div class="cv-main-title" style="color: ${ds.text}; border-bottom: 3px solid ${ds.line}">${i18n[lang].cvTitle}</div>` },
+                { type: 'info', html: `<div class="d-flex justify-content-between gap-3 mb-4" style="color: ${ds.text}"><div style="flex:1"><h1 class="fw-bold m-0" style="font-size: 2.5em; line-height:1; color: ${ds.text}">${name}</h1><div class="mt-2 small" style="color: ${ds.desc}">${contacts}</div>${summary ? `<div class="section-title" style="color:${ds.accent}; border-bottom: 2px solid ${ds.line}">${i18n[lang].personalTitle}</div><div style="white-space:pre-wrap; font-size: 0.95em; color: ${ds.text}">${summary}</div>` : ''}</div>${photoBase64 ? `<div class="cv-photo-container" style="width:${ds.pSize}mm; height:${ds.pSize * 1.3}mm; border:${ds.pBorder}mm solid ${ds.pBorderColor}"><img src="${photoBase64}"></div>` : ''}</div>` }
+            ];
+            const sections = [ {id: 'expInputs', title: i18n[lang].experience}, {id: 'eduInputs', title: i18n[lang].education} ];
+            sections.forEach(sec => {
+                const items = Array.from(document.getElementById(sec.id).children);
+                items.forEach((it, idx) => {
+                    const dStr = formatDate(it.querySelector('.e-start').value) + ' — ' + formatDate(it.querySelector('.e-end').value);
+                    const entryHtml = `<div class="row g-0 mb-3"><div class="col-3 small fw-bold" style="color: ${ds.date}">${dStr}</div><div class="col-9 ps-3"><div class="fw-bold" style="color: ${ds.text}">${it.querySelector('.e-title').value}</div><div class="small fw-bold" style="color: ${ds.desc}">${it.querySelector('.e-org').value}</div><div class="mt-1 small" style="white-space:pre-wrap; color: ${ds.text}">${it.querySelector('.e-desc').value}</div></div></div>`;
+                    blocks.push({ type: 'entry', sectionTitle: sec.title, isFirstInSection: idx === 0, html: entryHtml });
+                });
+            });
+            const skills = Array.from(document.getElementById('skillsInputs').children).map(d => {
+                const sName = d.querySelector('input.s-name').value;
+                const sType = d.querySelector('select.s-type').value;
+                let sVal = "";
+                if(sType === 'job') sVal = d.querySelector('.s-lvl-job').value;
+                else if(sType === 'lang') sVal = d.querySelector('.s-lvl-lang').value;
+                else sVal = d.querySelector('.s-lvl-cust').value;
+                return { n: sName, v: sVal };
+            }).filter(s => s.n);
+            if (skills.length) {
+                const skillsHtml = `<div class="d-flex flex-wrap gap-1">${skills.map(s => `<span class="skills-tag" style="background:${ds.accent}15; color:${ds.text}; border:1px solid ${ds.accent}33"><strong>${s.n}</strong>${s.v ? `: ${s.v}` : ''}</span>`).join('')}</div>`;
+                blocks.push({ type: 'entry', sectionTitle: i18n[lang].skills, isFirstInSection: true, html: skillsHtml });
+            }
+            const container = document.getElementById('cv-pages-container');
+            container.innerHTML = "";
+            let pNum = 1;
+            let currentP = createPage(pNum, ds);
+            container.appendChild(currentP);
+            const ghost = document.getElementById('ghost-render');
+            ghost.style.fontSize = ds.size + "pt";
+            let lastSection = "";
+            blocks.forEach(b => {
+                let finalHtml = b.html;
+                if (b.type === 'entry' && b.isFirstInSection) {
+                    finalHtml = `<div class="section-title" style="color:${ds.accent}; border-bottom: 2px solid ${ds.line}">${b.sectionTitle}</div>` + b.html;
+                    lastSection = b.sectionTitle;
+                }
+                ghost.innerHTML = finalHtml;
+                if (currentP.querySelector('.page-content').offsetHeight + ghost.offsetHeight > 940) {
+                    pNum++;
+                    currentP = createPage(pNum, ds);
+                    container.appendChild(currentP);
+                    if (b.type === 'entry') {
+                        const contH = document.createElement('div');
+                        contH.className = "section-title";
+                        contH.style.color = ds.accent;
+                        contH.style.borderBottom = `2px solid ${ds.line}`;
+                        contH.innerHTML = `${b.sectionTitle} <span style="opacity:0.5; font-size:0.8em; text-transform:none;">${i18n[lang].cont}</span>`;
+                        currentP.querySelector('.page-content').appendChild(contH);
+                    }
+                }
+                const div = document.createElement('div');
+                div.innerHTML = finalHtml;
+                currentP.querySelector('.page-content').appendChild(div);
+            });
+            fitPreviewToScreen();
+            autoSave();
+        }
+
+        function exportJSON() {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(collectData(), null, 4)], {type:'application/json'}));
+            a.download = getFileName() + '.json';
+            a.click();
+            showStarAfterExport();
+        }
+
+        function handleImport(input) {
+            if (input.files[0]) {
+                const r = new FileReader();
+                r.onload = e => {
+                    const d = JSON.parse(e.target.result);
+                    delete d.id;
+                    db.transaction("cvs", "readwrite").objectStore("cvs").add(d).onsuccess = (ev) => {
+                        currentId = ev.target.result; loadData(d); updateList();
+                    };
+                };
+                r.readAsText(input.files[0]);
+            }
+        }
+
+        function collectData() {
+            return {
+                id: currentId, fn: document.getElementById('firstName').value, ln: document.getElementById('lastName').value,
+                sum: document.getElementById('summary').value, photo: photoBase64, original: originalPhoto, lang: document.getElementById('uiLang').value,
+                contacts: Array.from(document.querySelectorAll('#contactInputs > div')).map(d => ({t:d.querySelectorAll('input')[0].value, v:d.querySelectorAll('input')[1].value})),
+                exp: Array.from(document.getElementById('expInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
+                edu: Array.from(document.getElementById('eduInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
+                skills: Array.from(document.getElementById('skillsInputs').children).map(d=>({
+                    n:d.querySelector('input.s-name').value, t:d.querySelector('select.s-type').value,
+                    v: d.querySelector('.s-lvl-job').value || d.querySelector('.s-lvl-lang').value || d.querySelector('.s-lvl-cust').value
+                })),
+                ds: { size: document.getElementById('fontSize').value, pSize: document.getElementById('photoSize').value, pBorder: document.getElementById('photoBorderSize').value, accent: document.getElementById('accentColor').value, text: document.getElementById('textColor').value, date: document.getElementById('dateColor').value, desc: document.getElementById('descColor').value, line: document.getElementById('lineColor').value, pBorderColor: document.getElementById('photoBorderColor').value, dOrder: document.getElementById('dateOrder').value, dSep: document.getElementById('dateSep').value }
+            };
+        }
+
         function autoSave() {
             if (!db || isLoading) return;
             const data = collectData();
             const store = db.transaction("cvs", "readwrite").objectStore("cvs");
             if (currentId) store.put(data).onsuccess = () => updateList();
             else { delete data.id; store.add(data).onsuccess = e => { currentId = e.target.result; updateList(); }; }
-        }
-
-        function collectData() {
-            return {
-                id: currentId, fn: document.getElementById('firstName').value, ln: document.getElementById('lastName').value,
-                sum: document.getElementById('summary').value, photo: photoBase64, original: originalPhoto,
-                lang: document.getElementById('uiLang').value, updatedAt: new Date(),
-                contacts: Array.from(document.querySelectorAll('#contactInputs > div')).map(d => ({t:d.querySelectorAll('input')[0].value, v:d.querySelectorAll('input')[1].value})),
-                exp: Array.from(document.getElementById('expInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
-                edu: Array.from(document.getElementById('eduInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
-                skills: Array.from(document.getElementById('skillsInputs').children).map(d=>({n:d.querySelector('input').value, l:d.querySelector('select').value})),
-                ds: { size: document.getElementById('fontSize').value, pSize: document.getElementById('photoSize').value, accent: document.getElementById('accentColor').value, text: document.getElementById('textColor').value }
-            };
         }
 
         function loadLast() { db.transaction("cvs").objectStore("cvs").getAll().onsuccess = e => { if (e.target.result.length) loadData(e.target.result[e.target.result.length-1]); else createNew(); updateList(); initSortable(); }; }
@@ -397,68 +475,46 @@
         function loadData(d) {
             isLoading = true; currentId = d.id;
             document.getElementById('uiLang').value = d.lang || "en";
-            document.getElementById('firstName').value = d.fn || "";
-            document.getElementById('lastName').value = d.ln || "";
-            document.getElementById('summary').value = d.sum || "";
-            photoBase64 = d.photo || ""; originalPhoto = d.original || "";
+            document.getElementById('firstName').value = d.fn || ""; document.getElementById('lastName').value = d.ln || "";
+            document.getElementById('summary').value = d.sum || ""; photoBase64 = d.photo || ""; originalPhoto = d.original || "";
+            updatePhotoUI();
             if (d.ds) {
-                document.getElementById('fontSize').value = d.ds.size; document.getElementById('fontSizeVal').innerText = d.ds.size;
-                document.getElementById('photoSize').value = d.ds.pSize; document.getElementById('photoSizeVal').innerText = d.ds.pSize;
-                document.getElementById('accentColor').value = d.ds.accent; document.getElementById('textColor').value = d.ds.text;
+                document.getElementById('fontSize').value = d.ds.size; document.getElementById('photoSize').value = d.ds.pSize;
+                document.getElementById('photoBorderSize').value = d.ds.pBorder || 0; document.getElementById('accentColor').value = d.ds.accent;
+                document.getElementById('textColor').value = d.ds.text; document.getElementById('dateColor').value = d.ds.date || "#666666";
+                document.getElementById('descColor').value = d.ds.desc || "#555555"; document.getElementById('lineColor').value = d.ds.line || "#333333";
+                document.getElementById('photoBorderColor').value = d.ds.pBorderColor || "#eeeeee";
+                document.getElementById('dateOrder').value = d.ds.dOrder || "MY_TEXT"; document.getElementById('dateSep').value = d.ds.dSep || ".";
             }
             document.getElementById('contactInputs').innerHTML = ""; (d.contacts||[]).forEach(c => addContact(c.t, c.v));
             document.getElementById('expInputs').innerHTML = ""; (d.exp||[]).forEach(x => addEntry('expInputs', x));
             document.getElementById('eduInputs').innerHTML = ""; (d.edu||[]).forEach(x => addEntry('eduInputs', x));
-            document.getElementById('skillsInputs').innerHTML = ""; (d.skills||[]).forEach(s => addSkill(s.n, s.l));
+            document.getElementById('skillsInputs').innerHTML = ""; (d.skills||[]).forEach(s => addSkill(s.n, s.t, s.v || s.l));
             changeLang(); isLoading = false; render();
         }
 
-        function createNew() { currentId = null; photoBase64 = ""; originalPhoto = ""; document.getElementById('firstName').value = ""; document.getElementById('lastName').value = ""; document.getElementById('summary').value = ""; document.getElementById('contactInputs').innerHTML = ""; document.getElementById('expInputs').innerHTML = ""; document.getElementById('eduInputs').innerHTML = ""; document.getElementById('skillsInputs').innerHTML = ""; addContact(); render(); }
+        function createNew() { currentId = null; photoBase64 = ""; originalPhoto = ""; document.getElementById('firstName').value = ""; document.getElementById('lastName').value = ""; document.getElementById('summary').value = ""; updatePhotoUI(); document.getElementById('contactInputs').innerHTML = ""; document.getElementById('expInputs').innerHTML = ""; document.getElementById('eduInputs').innerHTML = ""; document.getElementById('skillsInputs').innerHTML = ""; addContact(); render(); }
         function deleteCurrent() { if (confirm(i18n[document.getElementById('uiLang').value].confirmDelete)) { db.transaction("cvs", "readwrite").objectStore("cvs").delete(currentId).onsuccess = () => loadLast(); } }
 
         function addContact(t="Email", v="") { const div = document.createElement('div'); div.className="draggable-card d-flex gap-2 align-items-center"; div.innerHTML=`<div class="drag-handle">⠿</div><input type="text" value="${t}" class="form-control form-control-sm w-25" oninput="render()"><input type="text" value="${v}" class="form-control form-control-sm flex-grow-1" oninput="render()"><button onclick="this.parentElement.remove(); render()" class="btn btn-sm text-danger">✕</button>`; document.getElementById('contactInputs').appendChild(div); render(); }
         function addEntry(id, d={}) { const div = document.createElement('div'); div.className="draggable-card"; div.innerHTML=`<div class="d-flex gap-2 mb-2"><div class="drag-handle">⠿</div><input type="date" class="form-control form-control-sm e-start" value="${d.s||''}" oninput="render()"><input type="date" class="form-control form-control-sm e-end" value="${d.e||''}" oninput="render()"><button onclick="this.parentElement.parentElement.remove(); render()" class="btn btn-sm text-danger ms-auto">✕</button></div><input type="text" placeholder="Title" class="form-control form-control-sm fw-bold mb-1 e-title" value="${d.t||''}" oninput="render()"><input type="text" placeholder="Organization" class="form-control form-control-sm mb-1 e-org" value="${d.o||''}" oninput="render()"><textarea class="form-control form-control-sm e-desc" rows="2" oninput="render()">${d.d||''}</textarea>`; document.getElementById(id).appendChild(div); render(); }
-        function addSkill(n="", l="") { const div = document.createElement('div'); div.className="draggable-card d-flex gap-2 align-items-center"; div.innerHTML=`<div class="drag-handle">⠿</div><input type="text" value="${n}" class="form-control form-control-sm flex-grow-1" oninput="render()"><select class="form-select form-select-sm w-auto" onchange="render()"><option value="">Level</option><option value="Junior" ${l==='Junior'?'selected':''}>Junior</option><option value="Middle" ${l==='Middle'?'selected':''}>Middle</option><option value="Senior" ${l==='Senior'?'selected':''}>Senior</option></select><button onclick="this.parentElement.remove(); render()" class="btn btn-sm text-danger">✕</button>`; document.getElementById('skillsInputs').appendChild(div); render(); }
 
+        function addSkill(n="", t="job", v="") {
+            const div = document.createElement('div'); div.className="draggable-card";
+            const isJob = t === 'job' || !t; const isLang = t === 'lang'; const isCust = t === 'custom';
+            div.innerHTML=`<div class="d-flex gap-2 align-items-center mb-1"><div class="drag-handle">⠿</div><input type="text" class="form-control form-control-sm s-name" value="${n}" placeholder="Skill Name" oninput="render()"><button onclick="this.parentElement.parentElement.remove(); render()" class="btn btn-sm text-danger">✕</button></div><div class="d-flex gap-2"><select class="form-select form-select-sm s-type" style="width: 35%" onchange="updateSkillInput(this); render()"><option value="job" ${isJob?'selected':''}>Worker</option><option value="lang" ${isLang?'selected':''}>Language</option><option value="custom" ${isCust?'selected':''}>Custom</option></select><select class="form-select form-select-sm s-lvl-job" style="display:${isJob?'block':'none'}" onchange="render()"><option value="">None</option><option value="Junior" ${v==='Junior'?'selected':''}>Junior</option><option value="Middle" ${v==='Middle'?'selected':''}>Middle</option><option value="Senior" ${v==='Senior'?'selected':''}>Senior</option><option value="Lead" ${v==='Lead'?'selected':''}>Lead</option></select><select class="form-select form-select-sm s-lvl-lang" style="display:${isLang?'block':'none'}" onchange="render()"><option value="">None</option><option value="A1" ${v==='A1'?'selected':''}>A1</option><option value="A2" ${v==='A2'?'selected':''}>A2</option><option value="B1" ${v==='B1'?'selected':''}>B1</option><option value="B2" ${v==='B2'?'selected':''}>B2</option><option value="C1" ${v==='C1'?'selected':''}>C1</option><option value="C2" ${v==='C2'?'selected':''}>C2</option><option value="Native" ${v==='Native'?'selected':''}>Native</option></select><input type="text" class="form-control form-control-sm s-lvl-cust" style="display:${isCust?'block':'none'}" placeholder="Level..." value="${isCust?v:''}" oninput="render()"></div>`;
+            document.getElementById('skillsInputs').appendChild(div); render();
+        }
+
+        function updateSkillInput(select) { const parent = select.parentElement; const val = select.value; parent.querySelector('.s-lvl-job').style.display = val === 'job' ? 'block' : 'none'; parent.querySelector('.s-lvl-lang').style.display = val === 'lang' ? 'block' : 'none'; parent.querySelector('.s-lvl-cust').style.display = val === 'custom' ? 'block' : 'none'; }
         function initSortable() { document.querySelectorAll('.sortable-list').forEach(el => new Sortable(el, { handle: '.drag-handle', animation: 150, onEnd: render })); }
-        function initCropper(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = e => { originalPhoto = e.target.result; openCropper(originalPhoto); }; reader.readAsDataURL(input.files[0]); } }
+        function initCropper(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = e => { originalPhoto = e.target.result; openCropper(originalPhoto); }; r.readAsDataURL(input.files[0]); } }
         function reCropCurrent() { if (originalPhoto) openCropper(originalPhoto); }
         function openCropper(src) { document.getElementById('image-to-crop').src = src; cropModal.show(); if (cropper) cropper.destroy(); setTimeout(() => { cropper = new Cropper(document.getElementById('image-to-crop'), { aspectRatio: 0.77, viewMode: 1 }); }, 300); }
-        function applyCrop() { photoBase64 = cropper.getCroppedCanvas({ width: 500 }).toDataURL("image/jpeg"); document.getElementById('recropBtn').classList.remove('d-none'); cropModal.hide(); render(); }
+        function applyCrop() { photoBase64 = cropper.getCroppedCanvas({ width: 500 }).toDataURL("image/jpeg"); updatePhotoUI(); cropModal.hide(); render(); }
+        function updatePhotoUI() { const t = document.getElementById('photoThumb'); if (photoBase64) { t.src = photoBase64; t.style.display = 'block'; document.getElementById('recropBtn').classList.remove('d-none'); } else { t.style.display = 'none'; document.getElementById('recropBtn').classList.add('d-none'); } }
 
-        function getFileName() {
-            const fn = document.getElementById('firstName').value || 'Firstname';
-            const ln = document.getElementById('lastName').value || 'Lastname';
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0]; // ГГГГ-ММ-ДД
-            const timeStr = now.getHours().toString().padStart(2, '0') + '-' +
-                            now.getMinutes().toString().padStart(2, '0');
-            return `CV_${fn}_${ln}_${dateStr}_${timeStr}`;
-        }
-
-        function exportPDF() {
-            const pages = document.querySelectorAll('.page-wrapper');
-            const filename = getFileName() + '.pdf';
-
-            pages.forEach(p => { p.style.transform = 'none'; p.style.marginBottom = '25px'; });
-
-            html2pdf().from(document.getElementById('cv-pages-container')).set({
-                margin: 0,
-                filename: filename,
-                html2canvas: { scale: 2 },
-                jsPDF: { format: 'a4' }
-            }).save().then(fitPreviewToScreen);
-        }
-
-        function exportJSON() {
-            const data = collectData();
-            const filename = getFileName() + '.json';
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'}));
-            a.download = filename;
-            a.click();
-        }
-        function handleImport(input) { if (input.files[0]) { const reader = new FileReader(); reader.onload = e => { const data = JSON.parse(e.target.result); delete data.id; db.transaction("cvs", "readwrite").objectStore("cvs").add(data).onsuccess = (ev) => { currentId = ev.target.result; loadData(data); updateList(); }; }; reader.readAsText(input.files[0]); } }
+        window.onresize = fitPreviewToScreen;
     </script>
 </body>
 </html>
