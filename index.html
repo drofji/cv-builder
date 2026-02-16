@@ -14,48 +14,77 @@
 
     <style>
         :root { --sidebar-width: 450px; --a4-width: 210mm; --a4-height: 297mm; }
+
         body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-        .navbar { height: 60px; border-bottom: 1px solid #dee2e6; background: #fff !important; z-index: 1100; position: relative; }
+        .navbar { min-height: 60px; border-bottom: 1px solid #dee2e6; background: #fff !important; z-index: 1100; position: relative; }
         .main-container { height: calc(100vh - 60px); display: flex; }
-        .editor-side { width: var(--sidebar-width); background: white; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; }
+        .editor-side { width: var(--sidebar-width); background: white; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; flex-shrink: 0; }
         .editor-scroll-area { flex: 1; overflow-y: auto; padding: 25px; }
+
+        /* Footer styling */
+        .editor-footer { padding: 15px; border-top: 1px solid #eee; background: #f8f9fa; font-size: 0.8rem; text-align: center; }
+        .editor-footer a { color: #666; text-decoration: none; }
+        .editor-footer a:hover { text-decoration: underline; }
+
         .preview-side { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; background: #525659; }
-        .page-wrapper { width: var(--a4-width); height: var(--a4-height); background: white; padding: 15mm; position: relative; box-sizing: border-box; overflow: hidden; margin-bottom: 25px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+
+        .page-wrapper {
+            width: var(--a4-width);
+            height: var(--a4-height);
+            background: white;
+            padding: 15mm;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transform-origin: top center;
+            transition: transform 0.2s;
+        }
+
         .section-title { font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #333; margin-top: 15px; margin-bottom: 10px; }
+        .section-continued { font-size: 0.8em; opacity: 0.7; text-transform: none; margin-left: 5px; }
         .cv-photo-container { overflow: hidden; flex-shrink: 0; background: #f8f9fa; border: 1px solid #eee; }
         .cv-photo-container img { width: 100%; height: 100%; object-fit: cover; }
         .skills-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; margin: 0 4px 4px 0; font-size: 0.9em; }
         .draggable-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fff; position: relative; }
         .drag-handle { cursor: grab; color: #ccc; margin-right: 10px; font-size: 1.2rem; }
-        .offcanvas { z-index: 1050 !important; top: 60px !important; height: calc(100% - 60px) !important; width: 350px !important; }
-        #ghost-render { position: absolute; top: -9999px; width: 180mm; visibility: hidden; }
+        .cv-main-title { text-align: center; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 5px; font-weight: bold; letter-spacing: 2px; }
+
+        @media (max-width: 991px) {
+            body { overflow: auto; height: auto; }
+            .navbar { padding: 10px; height: auto; }
+            .main-container { flex-direction: column; height: auto; }
+            .editor-side { width: 100%; border-right: none; border-bottom: 1px solid #dee2e6; max-height: 65vh; }
+            .preview-side { width: 100%; padding: 20px 5px; overflow: hidden; }
+            .navbar .d-flex { flex-wrap: wrap; gap: 8px; }
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar px-3 d-flex align-items-center">
+    <nav class="navbar px-3">
         <div class="d-flex align-items-center justify-content-between w-100">
-            <div class="d-flex align-items-center gap-2">
-                <span class="fw-bold me-2">CV BUILDER</span>
-
-                <div class="input-group input-group-sm" style="max-width: 400px;">
+            <div class="d-flex align-items-center gap-2 flex-grow-1">
+                <span class="fw-bold me-2 text-nowrap">CV BUILDER</span>
+                <div class="input-group input-group-sm flex-nowrap" style="max-width: 250px;">
                     <select id="cvSelect" class="form-select" onchange="loadFromSelector()"></select>
-                    <button class="btn btn-outline-danger" onclick="deleteCurrent()" title="Delete current CV">🗑️</button>
+                    <button class="btn btn-outline-danger" onclick="deleteCurrent()">🗑️</button>
                 </div>
-
                 <select id="uiLang" class="form-select form-select-sm w-auto" onchange="changeLang()">
                     <option value="en">EN</option>
                     <option value="de">DE</option>
                 </select>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary fw-bold" data-bs-toggle="offcanvas" data-bs-target="#designPanel">🎨 <span data-i18n="designBtn">DESIGN</span></button>
-                <div class="vr mx-1"></div>
+
+            <div class="d-flex gap-2 mt-2 mt-lg-0 align-items-center flex-wrap justify-content-end">
+                <button class="btn btn-sm btn-outline-primary fw-bold" data-bs-toggle="offcanvas" data-bs-target="#designPanel">🎨 <span class="d-none d-sm-inline" data-i18n="designBtn">DESIGN</span></button>
+                <div class="vr d-none d-sm-block mx-1"></div>
                 <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="createNew()">+ <span data-i18n="newBtn">NEW</span></button>
-                <label class="btn btn-sm btn-outline-dark fw-bold m-0" style="cursor: pointer;">
-                    IMPORT <input type="file" accept=".json" hidden onchange="handleImport(this)">
+                <label class="btn btn-sm btn-outline-dark fw-bold m-0 text-nowrap" style="cursor: pointer;">
+                    IMPORT JSON <input type="file" accept=".json" hidden onchange="handleImport(this)">
                 </label>
-                <button class="btn btn-sm btn-dark fw-bold" data-bs-toggle="modal" data-bs-target="#exportModal" data-i18n="exportBtn">EXPORT</button>
+                <button class="btn btn-sm btn-dark fw-bold px-3" data-bs-toggle="modal" data-bs-target="#exportModal" data-i18n="exportBtn">EXPORT</button>
             </div>
         </div>
     </nav>
@@ -68,12 +97,10 @@
                     <div class="col-6"><input type="text" id="firstName" class="form-control" placeholder="First Name" data-i18n-ph="phName" oninput="render()"></div>
                     <div class="col-6"><input type="text" id="lastName" class="form-control" placeholder="Last Name" data-i18n-ph="phSurname" oninput="render()"></div>
                 </div>
-
                 <div class="mb-4 d-flex gap-2">
                     <input type="file" id="photoInput" class="form-control form-control-sm" accept="image/*" onchange="initCropper(this)">
                     <button id="recropBtn" class="btn btn-sm btn-outline-secondary d-none" onclick="reCropCurrent()" data-i18n="recrop">Recrop</button>
                 </div>
-
                 <textarea id="summary" class="form-control mb-4" rows="3" placeholder="Summary..." data-i18n-ph="phSummary" oninput="render()"></textarea>
 
                 <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold small m-0 text-muted" data-i18n="contacts">CONTACTS</h6><button class="btn btn-sm p-0 text-primary" onclick="addContact()">+ <span data-i18n="add">Add</span></button></div>
@@ -88,6 +115,11 @@
                 <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold small m-0 text-muted" data-i18n="skills">SKILLS</h6><button class="btn btn-sm p-0 text-primary" onclick="addSkill()">+ <span data-i18n="add">Add</span></button></div>
                 <div id="skillsInputs" class="mb-3 sortable-list"></div>
             </div>
+
+            <div class="editor-footer">
+                Created by <a href="http://github.com/drofji" target="_blank">drofji</a> |
+                <a href="http://github.com/drofji/cv-builder" target="_blank">Source Code</a>
+            </div>
         </aside>
 
         <main class="preview-side">
@@ -95,7 +127,7 @@
         </main>
     </div>
 
-    <div class="offcanvas offcanvas-end" id="designPanel" data-bs-scroll="true">
+    <div class="offcanvas offcanvas-end" id="designPanel">
         <div class="offcanvas-header border-bottom">
             <h6 class="offcanvas-title fw-bold" data-i18n="designBtn">DESIGN SETTINGS</h6>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -131,19 +163,18 @@
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header">
-                    <h6 class="modal-title fw-bold" data-i18n="exportBtn">Export</h6>
+                    <h6 class="modal-title fw-bold" data-i18n="exportBtn">EXPORT</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body d-grid gap-2">
                     <button class="btn btn-success fw-bold py-2" onclick="exportPDF()">Download PDF</button>
                     <button class="btn btn-outline-dark py-2" onclick="exportJSON()">Save JSON</button>
-                    <button class="btn btn-light btn-sm text-muted mt-2" data-bs-dismiss="modal" data-i18n="cancel">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="ghost-render"></div>
+    <div id="ghost-render" style="position: absolute; top: -9999px; width: 180mm; visibility: hidden;"></div>
     <div class="modal fade" id="cropModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 bg-dark text-white">
@@ -164,24 +195,25 @@
                 contacts: "CONTACTS", experience: "EXPERIENCE", education: "EDUCATION", skills: "SKILLS",
                 add: "Add", recrop: "Recrop", textSize: "Text Size", photoWidth: "Photo Width", accent: "Accent",
                 text: "Text Color", cancel: "Cancel", present: "Present", confirmDelete: "Are you sure you want to delete this CV?",
-                months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                cvTitle: "CURRICULUM VITAE", pageLabel: "Page", cont: "(continued)"
             },
             de: {
                 designBtn: "DESIGN", newBtn: "NEU", exportBtn: "EXPORT", personalTitle: "Persönliche Infos",
                 phName: "Vorname", phSurname: "Nachname", phSummary: "Zusammenfassung...",
                 contacts: "KONTAKTE", experience: "BERUFSERFAHRUNG", education: "AUSBILDUNG", skills: "KENNTNISSE",
                 add: "Hinzufügen", recrop: "Anpassen", textSize: "Schriftgröße", photoWidth: "Fotobreite", accent: "Akzent",
-                text: "Textfarbe", cancel: "Abbrechen", present: "Heute", confirmDelete: "Möchten Sie diesen Lebenslauf wirklich löschen?",
-                months: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+                text: "Textfarbe", cancel: "Abbrechen", present: "Heute", confirmDelete: "Möchten Sie diesen Lebenslauf wirklich lüschen?",
+                months: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+                cvTitle: "LEBENSLAUF", pageLabel: "Seite", cont: "(Fortsetzung)"
             }
         };
 
-        // State variables
-        let db, currentId = null, createdAt = null, photoBase64 = "", originalPhoto = "", cropper, isImported = false;
+        let db, currentId = null, createdAt = null, photoBase64 = "", originalPhoto = "", cropper, isLoading = false;
         const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
 
-        // DB Initialization
-        const request = indexedDB.open("CV_BUILDER_DB_V14", 1);
+        // Initialize IndexedDB
+        const request = indexedDB.open("CV_BUILDER_DB_V25", 1);
         request.onupgradeneeded = e => e.target.result.createObjectStore("cvs", { keyPath: "id", autoIncrement: true });
         request.onsuccess = e => { db = e.target.result; loadLast(); };
 
@@ -192,50 +224,12 @@
             render();
         }
 
-        function formatDate(val, lang) {
+        function formatDate(val) {
+            const lang = document.getElementById('uiLang').value;
             if (!val) return i18n[lang].present;
-            const [y, m] = val.split('-');
-            return `${i18n[lang].months[parseInt(m)-1]} ${y}`;
-        }
-
-        function collectData() {
-            return {
-                id: currentId,
-                fn: document.getElementById('firstName').value,
-                ln: document.getElementById('lastName').value,
-                sum: document.getElementById('summary').value,
-                photo: photoBase64, original: originalPhoto,
-                lang: document.getElementById('uiLang').value,
-                updatedAt: new Date(),
-                createdAt: createdAt || new Date(), // Keep original creation date
-                isImported: isImported,
-                contacts: Array.from(document.querySelectorAll('#contactInputs > div')).map(d => ({t:d.querySelectorAll('input')[0].value, v:d.querySelectorAll('input')[1].value})),
-                exp: Array.from(document.getElementById('expInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
-                edu: Array.from(document.getElementById('eduInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
-                skills: Array.from(document.getElementById('skillsInputs').children).map(d=>({n:d.querySelector('input').value, l:d.querySelector('select').value})),
-                ds: { size: document.getElementById('fontSize').value, pSize: document.getElementById('photoSize').value, accent: document.getElementById('accentColor').value, text: document.getElementById('textColor').value }
-            };
-        }
-
-        function autoSave() {
-            if (!db) return;
-            const data = collectData();
-            const store = db.transaction("cvs", "readwrite").objectStore("cvs");
-
-            if (currentId) {
-                // Update existing
-                store.put(data).onsuccess = () => updateList(false); // false = don't rebuild full list to avoid focus loss, but we might need it for name updates
-            } else {
-                // Create new
-                delete data.id;
-                store.add(data).onsuccess = e => {
-                    currentId = e.target.result;
-                    createdAt = data.createdAt; // Set global createdAt
-                    updateList();
-                };
-            }
-            // Debounce list update for cleaner UI
-            if (currentId) updateList();
+            const d = new Date(val);
+            if (isNaN(d.getTime())) return val;
+            return `${i18n[lang].months[d.getMonth()]} ${d.getFullYear()}`;
         }
 
         function render() {
@@ -247,11 +241,14 @@
                 text: document.getElementById('textColor').value
             };
 
-            const name = (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value).trim() || "Full Name";
+            const name = (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value).trim() || "Name";
             const contactsList = Array.from(document.querySelectorAll('#contactInputs > div')).map(d => d.querySelectorAll('input')[1].value).filter(v => v).join('  •  ');
             const summary = document.getElementById('summary').value;
 
-            const blocks = [{ type: 'raw', html: `
+            // Data blocks for rendering
+            const blocks = [
+                { type: 'header', html: `<div class="cv-main-title" style="color: ${ds.text}; border-bottom: 3px solid ${ds.accent}">${i18n[lang].cvTitle}</div>` },
+                { type: 'info', html: `
                 <div class="d-flex justify-content-between gap-3 mb-4" style="color: ${ds.text}">
                     <div style="flex:1">
                         <h1 class="fw-bold m-0" style="font-size: 2.5em; line-height:1">${name}</h1>
@@ -262,21 +259,22 @@
                 </div>`
             }];
 
-            ['expInputs', 'eduInputs'].forEach(id => {
-                const items = Array.from(document.getElementById(id).children);
+            const sections = [
+                {id: 'expInputs', title: i18n[lang].experience},
+                {id: 'eduInputs', title: i18n[lang].education}
+            ];
+
+            sections.forEach(sec => {
+                const items = Array.from(document.getElementById(sec.id).children);
                 if (items.length) {
-                    blocks.push({ type: 'title', text: i18n[lang][id === 'expInputs' ? 'experience' : 'education'] });
-                    items.forEach(it => {
-                        const dateStr = formatDate(it.querySelector('.e-start').value, lang) + ' — ' + formatDate(it.querySelector('.e-end').value, lang);
-                        blocks.push({ type: 'raw', html: `
-                            <div class="row g-0 mb-3" style="color: ${ds.text}">
-                                <div class="col-3 small fw-bold opacity-75">${dateStr}</div>
-                                <div class="col-9 ps-3">
-                                    <div class="fw-bold">${it.querySelector('.e-title').value}</div>
-                                    <div class="opacity-75 small">${it.querySelector('.e-org').value}</div>
-                                    <div class="mt-1 small" style="white-space:pre-wrap">${it.querySelector('.e-desc').value}</div>
-                                </div>
-                            </div>`
+                    items.forEach((it, idx) => {
+                        const dateStr = formatDate(it.querySelector('.e-start').value) + ' — ' + formatDate(it.querySelector('.e-end').value);
+                        const contentHtml = `<div class="row g-0 mb-3" style="color: ${ds.text}"><div class="col-3 small fw-bold opacity-75">${dateStr}</div><div class="col-9 ps-3"><div class="fw-bold">${it.querySelector('.e-title').value}</div><div class="opacity-75 small">${it.querySelector('.e-org').value}</div><div class="mt-1 small" style="white-space:pre-wrap">${it.querySelector('.e-desc').value}</div></div></div>`;
+                        blocks.push({
+                            type: 'entry',
+                            sectionTitle: sec.title,
+                            isFirstInSection: idx === 0,
+                            html: contentHtml
                         });
                     });
                 }
@@ -284,198 +282,183 @@
 
             const skills = Array.from(document.getElementById('skillsInputs').children).map(d => ({ n: d.querySelector('input').value, l: d.querySelector('select').value })).filter(s => s.n);
             if (skills.length) {
-                blocks.push({ type: 'title', text: i18n[lang].skills });
-                blocks.push({ type: 'raw', html: `<div class="d-flex flex-wrap gap-1">${skills.map(s => `<span class="skills-tag" style="background:${ds.accent}15; color:${ds.text}; border:1px solid ${ds.accent}33"><strong>${s.n}</strong>${s.l ? `: ${s.l}` : ''}</span>`).join('')}</div>` });
+                const skillsHtml = `<div class="d-flex flex-wrap gap-1">${skills.map(s => `<span class="skills-tag" style="background:${ds.accent}15; color:${ds.text}; border:1px solid ${ds.accent}33"><strong>${s.n}</strong>${s.l ? `: ${s.l}` : ''}</span>`).join('')}</div>`;
+                blocks.push({ type: 'entry', sectionTitle: i18n[lang].skills, isFirstInSection: true, html: skillsHtml });
             }
 
+            // Pagination Logic
             const container = document.getElementById('cv-pages-container');
             container.innerHTML = "";
-            let currentP = createPage(1, ds);
+            let currentPageNum = 1;
+            let currentP = createPage(currentPageNum, ds, i18n[lang].pageLabel);
             container.appendChild(currentP);
+
+            let activeSectionTitle = "";
 
             blocks.forEach(b => {
                 const ghost = document.getElementById('ghost-render');
                 ghost.style.fontSize = ds.size + "pt";
-                const div = document.createElement('div');
-                div.innerHTML = b.type === 'title' ? `<div class="section-title" style="color:${ds.accent}; border-color:${ds.accent}">${b.text}</div>` : b.html;
-                ghost.innerHTML = ""; ghost.appendChild(div);
+                ghost.innerHTML = "";
 
-                if (currentP.querySelector('.page-content').offsetHeight + ghost.offsetHeight > 1000) {
-                    currentP = createPage(container.children.length + 1, ds);
-                    container.appendChild(currentP);
+                const tempDiv = document.createElement('div');
+                // If start of section, add title to ghost for measurement
+                if (b.type === 'entry' && b.isFirstInSection) {
+                    tempDiv.innerHTML = `<div class="section-title" style="color:${ds.accent}; border-color:${ds.accent}">${b.sectionTitle}</div>` + b.html;
+                } else {
+                    tempDiv.innerHTML = b.html;
                 }
-                const content = document.createElement('div'); content.innerHTML = div.innerHTML;
+                ghost.appendChild(tempDiv);
+
+                // If block doesn't fit
+                if (currentP.querySelector('.page-content').offsetHeight + ghost.offsetHeight > 1000) {
+                    currentPageNum++;
+                    currentP = createPage(currentPageNum, ds, i18n[lang].pageLabel);
+                    container.appendChild(currentP);
+
+                    // Duplicate header on new page if continuing a section
+                    if (b.type === 'entry') {
+                        const contHeader = document.createElement('div');
+                        contHeader.className = "section-title";
+                        contHeader.style.color = ds.accent;
+                        contHeader.style.borderColor = ds.accent;
+                        contHeader.innerHTML = `${b.sectionTitle} <span class="section-continued">${i18n[lang].cont}</span>`;
+                        currentP.querySelector('.page-content').appendChild(contHeader);
+                    }
+                }
+
+                // Add section title if it's the first element on current page
+                if (b.type === 'entry' && b.isFirstInSection && activeSectionTitle !== b.sectionTitle) {
+                    const header = document.createElement('div');
+                    header.className = "section-title";
+                    header.style.color = ds.accent;
+                    header.style.borderColor = ds.accent;
+                    header.innerText = b.sectionTitle;
+                    currentP.querySelector('.page-content').appendChild(header);
+                    activeSectionTitle = b.sectionTitle;
+                }
+
+                const content = document.createElement('div');
+                content.innerHTML = b.html;
                 currentP.querySelector('.page-content').appendChild(content);
             });
+
+            fitPreviewToScreen();
             autoSave();
         }
 
-        function createPage(n, ds) {
+        function createPage(n, ds, label) {
             const w = document.createElement('div'); w.className = "page-wrapper";
             w.style.fontSize = ds.size + "pt";
-            w.innerHTML = `<div class="page-content"></div><div style="position:absolute; bottom:10mm; right:10mm; font-size:8pt; opacity:0.3">Page ${n}</div>`;
+            w.innerHTML = `<div class="page-content"></div><div style="position:absolute; bottom:10mm; right:10mm; font-size:8pt; opacity:0.3">${label} ${n}</div>`;
             return w;
         }
 
-        function initCropper(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => { originalPhoto = e.target.result; openCropper(originalPhoto); };
-                reader.readAsDataURL(input.files[0]);
+        function fitPreviewToScreen() {
+            const pages = document.querySelectorAll('.page-wrapper');
+            if (window.innerWidth >= 992) {
+                pages.forEach(p => { p.style.transform = 'none'; p.style.marginBottom = '25px'; });
+                return;
             }
+            const containerWidth = document.querySelector('.preview-side').offsetWidth;
+            const scale = (containerWidth - 20) / 794;
+            pages.forEach(p => {
+                p.style.transform = `scale(${scale})`;
+                p.style.marginBottom = `${(1123 * scale) - 1123 + 20}px`;
+            });
         }
-        function reCropCurrent() { if (originalPhoto) openCropper(originalPhoto); }
-        function openCropper(src) {
-            document.getElementById('image-to-crop').src = src;
-            cropModal.show();
-            if (cropper) cropper.destroy();
-            setTimeout(() => { cropper = new Cropper(document.getElementById('image-to-crop'), { aspectRatio: 0.77, viewMode: 1 }); }, 300);
-        }
-        function applyCrop() {
-            photoBase64 = cropper.getCroppedCanvas({ width: 500 }).toDataURL("image/jpeg");
-            document.getElementById('recropBtn').classList.remove('d-none');
-            cropModal.hide(); render();
+        window.addEventListener('resize', fitPreviewToScreen);
+
+        // Standard data management functions
+        function autoSave() {
+            if (!db || isLoading) return;
+            const data = collectData();
+            const store = db.transaction("cvs", "readwrite").objectStore("cvs");
+            if (currentId) store.put(data).onsuccess = () => updateList();
+            else { delete data.id; store.add(data).onsuccess = e => { currentId = e.target.result; updateList(); }; }
         }
 
-        function addContact(t="Email", v="") {
-            const div = document.createElement('div'); div.className = "draggable-card d-flex gap-2 align-items-center";
-            div.innerHTML = `<div class="drag-handle">⠿</div><input type="text" value="${t}" class="form-control form-control-sm w-25" oninput="render()"><input type="text" value="${v}" class="form-control form-control-sm flex-grow-1" oninput="render()"><button onclick="this.parentElement.remove(); render()" class="btn btn-sm text-danger">✕</button>`;
-            document.getElementById('contactInputs').appendChild(div); render();
-        }
-        function addEntry(id, d={}) {
-            const div = document.createElement('div'); div.className = "draggable-card";
-            div.innerHTML = `
-                <div class="d-flex gap-2 mb-2"><div class="drag-handle">⠿</div>
-                <input type="month" class="form-control form-control-sm e-start" value="${d.s||''}" oninput="render()">
-                <input type="month" class="form-control form-control-sm e-end" value="${d.e||''}" oninput="render()">
-                <button onclick="this.parentElement.parentElement.remove(); render()" class="btn btn-sm text-danger ms-auto">✕</button></div>
-                <input type="text" placeholder="Title" class="form-control form-control-sm fw-bold mb-1 e-title" value="${d.t||''}" oninput="render()">
-                <input type="text" placeholder="Organization" class="form-control form-control-sm mb-1 e-org" value="${d.o||''}" oninput="render()">
-                <textarea class="form-control form-control-sm e-desc" rows="2" oninput="render()">${d.d||''}</textarea>`;
-            document.getElementById(id).appendChild(div); render();
-        }
-        function addSkill(n="", l="") {
-            const div = document.createElement('div'); div.className = "draggable-card d-flex gap-2 align-items-center";
-            div.innerHTML = `<div class="drag-handle">⠿</div><input type="text" value="${n}" class="form-control form-control-sm flex-grow-1" oninput="render()"><select class="form-select form-select-sm w-auto" onchange="render()"><option value="">Level</option><option value="Junior" ${l==='Junior'?'selected':''}>Junior</option><option value="Middle" ${l==='Middle'?'selected':''}>Middle</option><option value="Senior" ${l==='Senior'?'selected':''}>Senior</option><option value="Expert" ${l==='Expert'?'selected':''}>Expert</option></select><button onclick="this.parentElement.remove(); render()" class="btn btn-sm text-danger">✕</button>`;
-            document.getElementById('skillsInputs').appendChild(div); render();
-        }
-
-        function loadLast() {
-            db.transaction("cvs").objectStore("cvs").getAll().onsuccess = e => {
-                const list = e.target.result;
-                if (list.length) loadData(list[list.length-1]); else createNew();
-                updateList();
-                initSortable();
+        function collectData() {
+            return {
+                id: currentId, fn: document.getElementById('firstName').value, ln: document.getElementById('lastName').value,
+                sum: document.getElementById('summary').value, photo: photoBase64, original: originalPhoto,
+                lang: document.getElementById('uiLang').value, updatedAt: new Date(),
+                contacts: Array.from(document.querySelectorAll('#contactInputs > div')).map(d => ({t:d.querySelectorAll('input')[0].value, v:d.querySelectorAll('input')[1].value})),
+                exp: Array.from(document.getElementById('expInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
+                edu: Array.from(document.getElementById('eduInputs').children).map(d=>({s:d.querySelector('.e-start').value, e:d.querySelector('.e-end').value, t:d.querySelector('.e-title').value, o:d.querySelector('.e-org').value, d:d.querySelector('.e-desc').value})),
+                skills: Array.from(document.getElementById('skillsInputs').children).map(d=>({n:d.querySelector('input').value, l:d.querySelector('select').value})),
+                ds: { size: document.getElementById('fontSize').value, pSize: document.getElementById('photoSize').value, accent: document.getElementById('accentColor').value, text: document.getElementById('textColor').value }
             };
         }
 
-        function loadData(d) {
-            currentId = d.id;
-            isImported = !!d.isImported;
-            createdAt = d.createdAt ? new Date(d.createdAt) : new Date(); // Restore creation date
+        function loadLast() { db.transaction("cvs").objectStore("cvs").getAll().onsuccess = e => { if (e.target.result.length) loadData(e.target.result[e.target.result.length-1]); else createNew(); updateList(); initSortable(); }; }
+        function updateList() { db.transaction("cvs").objectStore("cvs").getAll().onsuccess = e => { document.getElementById('cvSelect').innerHTML = e.target.result.map(cv => `<option value="${cv.id}" ${cv.id===currentId?'selected':''}>${cv.fn || 'New'} ${cv.ln || ''}</option>`).join(''); }; }
+        function loadFromSelector() { currentId = parseInt(document.getElementById('cvSelect').value); db.transaction("cvs").objectStore("cvs").get(currentId).onsuccess = e => loadData(e.target.result); }
 
+        function loadData(d) {
+            isLoading = true; currentId = d.id;
             document.getElementById('uiLang').value = d.lang || "en";
             document.getElementById('firstName').value = d.fn || "";
             document.getElementById('lastName').value = d.ln || "";
             document.getElementById('summary').value = d.sum || "";
-            photoBase64 = d.photo || "";
-            originalPhoto = d.original || "";
-            document.getElementById('recropBtn').classList.toggle('d-none', !originalPhoto);
+            photoBase64 = d.photo || ""; originalPhoto = d.original || "";
             if (d.ds) {
-                document.getElementById('fontSize').value = d.ds.size;
-                document.getElementById('fontSizeVal').innerText = d.ds.size;
-                document.getElementById('photoSize').value = d.ds.pSize;
-                document.getElementById('photoSizeVal').innerText = d.ds.pSize;
-                document.getElementById('accentColor').value = d.ds.accent;
-                document.getElementById('textColor').value = d.ds.text;
+                document.getElementById('fontSize').value = d.ds.size; document.getElementById('fontSizeVal').innerText = d.ds.size;
+                document.getElementById('photoSize').value = d.ds.pSize; document.getElementById('photoSizeVal').innerText = d.ds.pSize;
+                document.getElementById('accentColor').value = d.ds.accent; document.getElementById('textColor').value = d.ds.text;
             }
             document.getElementById('contactInputs').innerHTML = ""; (d.contacts||[]).forEach(c => addContact(c.t, c.v));
             document.getElementById('expInputs').innerHTML = ""; (d.exp||[]).forEach(x => addEntry('expInputs', x));
             document.getElementById('eduInputs').innerHTML = ""; (d.edu||[]).forEach(x => addEntry('eduInputs', x));
             document.getElementById('skillsInputs').innerHTML = ""; (d.skills||[]).forEach(s => addSkill(s.n, s.l));
-            changeLang();
+            changeLang(); isLoading = false; render();
         }
 
-        function updateList() {
-            db.transaction("cvs").objectStore("cvs").getAll().onsuccess = e => {
-                const options = e.target.result.map(cv => {
-                    const created = cv.createdAt ? new Date(cv.createdAt).toLocaleString() : 'N/A';
-                    const imp = cv.isImported ? '[IMPORTED]' : '';
-                    return `<option value="${cv.id}" ${cv.id===currentId?'selected':''}>${cv.fn || 'New'} ${cv.ln || ''} (Created: ${created}) ${imp}</option>`;
-                }).join('');
-                document.getElementById('cvSelect').innerHTML = options;
-            };
-        }
+        function createNew() { currentId = null; photoBase64 = ""; originalPhoto = ""; document.getElementById('firstName').value = ""; document.getElementById('lastName').value = ""; document.getElementById('summary').value = ""; document.getElementById('contactInputs').innerHTML = ""; document.getElementById('expInputs').innerHTML = ""; document.getElementById('eduInputs').innerHTML = ""; document.getElementById('skillsInputs').innerHTML = ""; addContact(); render(); }
+        function deleteCurrent() { if (confirm(i18n[document.getElementById('uiLang').value].confirmDelete)) { db.transaction("cvs", "readwrite").objectStore("cvs").delete(currentId).onsuccess = () => loadLast(); } }
 
-        function loadFromSelector() {
-            const val = document.getElementById('cvSelect').value;
-            if(!val) return;
-            currentId = parseInt(val);
-            db.transaction("cvs").objectStore("cvs").get(currentId).onsuccess = e => loadData(e.target.result);
-        }
-
-        function createNew() {
-            currentId = null;
-            isImported = false;
-            createdAt = new Date(); // Set new creation time
-            photoBase64 = "";
-            originalPhoto = "";
-            document.getElementById('firstName').value = "";
-            document.getElementById('lastName').value = "";
-            document.getElementById('summary').value = "";
-            document.getElementById('contactInputs').innerHTML = "";
-            document.getElementById('expInputs').innerHTML = "";
-            document.getElementById('eduInputs').innerHTML = "";
-            document.getElementById('skillsInputs').innerHTML = "";
-            addContact();
-            render();
-        }
-
-        function deleteCurrent() {
-            if (!currentId) return;
-            const lang = document.getElementById('uiLang').value;
-            if (confirm(i18n[lang].confirmDelete)) {
-                db.transaction("cvs", "readwrite").objectStore("cvs").delete(currentId).onsuccess = () => {
-                    loadLast();
-                };
-            }
-        }
+        function addContact(t="Email", v="") { const div = document.createElement('div'); div.className="draggable-card d-flex gap-2 align-items-center"; div.innerHTML=`<div class="drag-handle">⠿</div><input type="text" value="${t}" class="form-control form-control-sm w-25" oninput="render()"><input type="text" value="${v}" class="form-control form-control-sm flex-grow-1" oninput="render()"><button onclick="this.parentElement.remove(); render()" class="btn btn-sm text-danger">✕</button>`; document.getElementById('contactInputs').appendChild(div); render(); }
+        function addEntry(id, d={}) { const div = document.createElement('div'); div.className="draggable-card"; div.innerHTML=`<div class="d-flex gap-2 mb-2"><div class="drag-handle">⠿</div><input type="date" class="form-control form-control-sm e-start" value="${d.s||''}" oninput="render()"><input type="date" class="form-control form-control-sm e-end" value="${d.e||''}" oninput="render()"><button onclick="this.parentElement.parentElement.remove(); render()" class="btn btn-sm text-danger ms-auto">✕</button></div><input type="text" placeholder="Title" class="form-control form-control-sm fw-bold mb-1 e-title" value="${d.t||''}" oninput="render()"><input type="text" placeholder="Organization" class="form-control form-control-sm mb-1 e-org" value="${d.o||''}" oninput="render()"><textarea class="form-control form-control-sm e-desc" rows="2" oninput="render()">${d.d||''}</textarea>`; document.getElementById(id).appendChild(div); render(); }
+        function addSkill(n="", l="") { const div = document.createElement('div'); div.className="draggable-card d-flex gap-2 align-items-center"; div.innerHTML=`<div class="drag-handle">⠿</div><input type="text" value="${n}" class="form-control form-control-sm flex-grow-1" oninput="render()"><select class="form-select form-select-sm w-auto" onchange="render()"><option value="">Level</option><option value="Junior" ${l==='Junior'?'selected':''}>Junior</option><option value="Middle" ${l==='Middle'?'selected':''}>Middle</option><option value="Senior" ${l==='Senior'?'selected':''}>Senior</option></select><button onclick="this.parentElement.remove(); render()" class="btn btn-sm text-danger">✕</button>`; document.getElementById('skillsInputs').appendChild(div); render(); }
 
         function initSortable() { document.querySelectorAll('.sortable-list').forEach(el => new Sortable(el, { handle: '.drag-handle', animation: 150, onEnd: render })); }
-        function exportPDF() { html2pdf().from(document.getElementById('cv-pages-container')).set({ margin:0, filename:'CV.pdf', html2canvas:{scale:2}, jsPDF:{format:'a4'} }).save(); }
+        function initCropper(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = e => { originalPhoto = e.target.result; openCropper(originalPhoto); }; reader.readAsDataURL(input.files[0]); } }
+        function reCropCurrent() { if (originalPhoto) openCropper(originalPhoto); }
+        function openCropper(src) { document.getElementById('image-to-crop').src = src; cropModal.show(); if (cropper) cropper.destroy(); setTimeout(() => { cropper = new Cropper(document.getElementById('image-to-crop'), { aspectRatio: 0.77, viewMode: 1 }); }, 300); }
+        function applyCrop() { photoBase64 = cropper.getCroppedCanvas({ width: 500 }).toDataURL("image/jpeg"); document.getElementById('recropBtn').classList.remove('d-none'); cropModal.hide(); render(); }
+
+        function getFileName() {
+            const fn = document.getElementById('firstName').value || 'Firstname';
+            const ln = document.getElementById('lastName').value || 'Lastname';
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // ГГГГ-ММ-ДД
+            const timeStr = now.getHours().toString().padStart(2, '0') + '-' +
+                            now.getMinutes().toString().padStart(2, '0');
+            return `CV_${fn}_${ln}_${dateStr}_${timeStr}`;
+        }
+
+        function exportPDF() {
+            const pages = document.querySelectorAll('.page-wrapper');
+            const filename = getFileName() + '.pdf';
+
+            pages.forEach(p => { p.style.transform = 'none'; p.style.marginBottom = '25px'; });
+
+            html2pdf().from(document.getElementById('cv-pages-container')).set({
+                margin: 0,
+                filename: filename,
+                html2canvas: { scale: 2 },
+                jsPDF: { format: 'a4' }
+            }).save().then(fitPreviewToScreen);
+        }
+
         function exportJSON() {
             const data = collectData();
+            const filename = getFileName() + '.json';
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'}));
-            a.download = `${data.fn || 'CV'}_data.json`;
+            a.download = filename;
             a.click();
         }
-
-        function handleImport(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const data = JSON.parse(e.target.result);
-
-                    // PREPARE FOR DB INSERTION IMMEDIATELY TO PREVENT DUPLICATES
-                    delete data.id; // Clear old ID
-                    data.isImported = true;
-                    // Keep old creation date if exists, else new
-                    data.createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
-                    data.updatedAt = new Date();
-
-                    const store = db.transaction("cvs", "readwrite").objectStore("cvs");
-                    const addRequest = store.add(data);
-
-                    addRequest.onsuccess = (ev) => {
-                        currentId = ev.target.result; // LOCK THE ID
-                        loadData(data); // LOAD DATA INTO UI
-                        updateList(); // UPDATE DROPDOWN
-                    };
-                };
-                reader.readAsText(input.files[0]);
-            }
-        }
+        function handleImport(input) { if (input.files[0]) { const reader = new FileReader(); reader.onload = e => { const data = JSON.parse(e.target.result); delete data.id; db.transaction("cvs", "readwrite").objectStore("cvs").add(data).onsuccess = (ev) => { currentId = ev.target.result; loadData(data); updateList(); }; }; reader.readAsText(input.files[0]); } }
     </script>
 </body>
 </html>
