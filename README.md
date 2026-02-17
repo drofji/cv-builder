@@ -3,6 +3,12 @@
 **Modern CV Builder** is an intuitive web tool for creating professional resumes in real time.  
 No registration, no ads — just your data and a perfect result.
 
+<a href="https://github.com/drofji/cv-builder/stargazers"><img src="https://img.shields.io/github/stars/drofji/cv-builder" alt="Stars Badge"/></a>
+<a href="https://github.com/drofji/cv-builder/network/members"><img src="https://img.shields.io/github/forks/drofji/cv-builder" alt="Forks Badge"/></a>
+<a href="https://github.com/drofji/cv-builder/pulls"><img src="https://img.shields.io/github/issues-pr/drofji/cv-builder" alt="Pull Requests Badge"/></a>
+<a href="https://github.com/drofji/cv-builder/issues"><img src="https://img.shields.io/github/issues/drofji/cv-builder" alt="Issues Badge"/></a>
+<a href="https://github.com/drofji/cv-builder/graphs/contributors"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/drofji/cv-builder?color=2b9348"></a>
+<a href="https://github.com/drofji/cv-builder/blob/master/LICENSE"><img src="https://img.shields.io/github/license/drofji/cv-builder?color=2b9348" alt="License Badge"/></a>
 ---
 
 ## 🌐 Live Demo
