@@ -1,0 +1,112 @@
+{
+    "fn": "Lukas",
+    "ln": "Müller",
+    "job": "Senior Information Security & Infrastructure Architect",
+    "sum": "Strategic Information Security Leader with over 10 years of experience in designing resilient network architectures and implementing Zero Trust frameworks. Expert in cloud security (AWS/Azure) and regulatory compliance (ISO 27001, GDPR). Proven track record of reducing infrastructure vulnerabilities by 60% through automated security auditing.",
+    "photo": "",
+    "original": "",
+    "lang": "en",
+    "contacts": [
+        { "t": "Email", "v": "l.mueller.sec@protonmail.com" },
+        { "t": "Phone", "v": "+49-176-555-9876" },
+        { "t": "Location", "v": "Berlin, Germany" },
+        { "t": "LinkedIn", "v": "linkedin.com/in/lukas-mueller-security" }
+    ],
+    "exp": [
+        {
+            "s": "2021-01-01",
+            "e": "",
+            "t": "Lead Security Infrastructure Engineer",
+            "o": "Deutsche Bank",
+            "d": "Leading the migration of core banking infrastructure to a secure multi-cloud environment.\nEstablished a company-wide DevSecOps culture by integrating automated security scanning into Jenkins pipelines.\nManaged a cross-functional team of 12 engineers to implement a global Identity and Access Management (IAM) system.\nConducting quarterly risk assessments and technical audits to maintain ISO 27001 certification."
+        },
+        {
+            "s": "2018-05-01",
+            "e": "2020-12-31",
+            "t": "Senior Network Security Consultant",
+            "o": "T-Systems International",
+            "d": "Designed and deployed enterprise-level firewall solutions for Fortune 500 clients.\nReduced incident response time by 35% through the implementation of a centralized SIEM (Splunk).\nAuthored technical security standards for IoT device integration in industrial environments."
+        }
+    ],
+    "edu": [
+        {
+            "s": "2015-10-01",
+            "e": "2017-09-01",
+            "t": "Master of Science in Cybersecurity",
+            "o": "Technical University of Berlin (TU Berlin)",
+            "d": "Focus on Cryptography, Network Forensics, and Secure Software Development.\nMaster's Thesis: 'Post-Quantum Cryptographic Protocols for Cloud Storage'.\nGrade: 1.1 (Distinction)."
+        },
+        {
+            "s": "2011-09-01",
+            "e": "2015-07-01",
+            "t": "Bachelor of Science in Computer Science",
+            "o": "RWTH Aachen University",
+            "d": "Core subjects: Operating Systems, Data Structures, and Communication Networks.\nRelevant Coursework: Database Security, Linux Systems Administration."
+        },
+        {
+            "s": "2022-03-01",
+            "e": "2022-09-01",
+            "t": "Executive Program: Digital Transformation",
+            "o": "Hasso Plattner Institute (HPI)",
+            "d": "Strategic management of IT infrastructure in large-scale organizations."
+        }
+    ],
+    "cert": [
+        {
+            "s": "2023-11-01",
+            "e": "2026-11-01",
+            "t": "CISSP - Certified Information Systems Security Professional",
+            "o": "ISC²",
+            "d": "Demonstrated deep knowledge of the 8 CISSP domains including Asset Security and Software Development Security."
+        },
+        {
+            "s": "2022-05-01",
+            "e": "",
+            "t": "CCIE Security (Cisco Certified Internetwork Expert)",
+            "o": "Cisco Systems",
+            "d": "Expert-level certification covering complex security solutions and network technologies."
+        },
+        {
+            "s": "2021-08-01",
+            "e": "2024-08-01",
+            "t": "AWS Certified Security – Specialty",
+            "o": "Amazon Web Services",
+            "d": "Validated expertise in securing AWS environments and data protection."
+        },
+        {
+            "s": "2020-02-15",
+            "e": "",
+            "t": "CISM - Certified Information Security Manager",
+            "o": "ISACA",
+            "d": "Focused on Information Security Governance and Incident Management."
+        }
+    ],
+    "proj": [
+        {
+            "s": "2022-06-01",
+            "e": "2022-12-01",
+            "t": "Zero Trust Migration Project",
+            "o": "Financial Sector Implementation",
+            "d": "Replaced legacy VPN infrastructure with a modern Zero Trust Network Access (ZTNA) solution.\nSuccessfully onboarded 5,000+ remote employees without downtime."
+        }
+    ],
+    "skills": [
+        { "n": "ISO 27001, SOC2, GDPR Compliance", "t": "method" },
+        { "n": "Firewalls (Palo Alto, Fortinet), VPN, ZTNA", "t": "tech" },
+        { "n": "SIEM, IDS/IPS, Vulnerability Management", "t": "tools" },
+        { "n": "AWS Security, Azure Sentinel, Terraform", "t": "tech" },
+        { "n": "Python, Bash, PowerShell", "t": "tech" },
+        { "n": "Risk Assessment, Disaster Recovery", "t": "method" }
+    ],
+    "ds": {
+        "size": "10.5",
+        "hSize": "14.5",
+        "pSize": "35",
+        "accent": "#1a1a1a",
+        "text": "#333333",
+        "headerBg": "#f8f9fa",
+        "dOrder": "MY_TEXT",
+        "dSep": " ",
+        "showPhoto": false
+    }
+}
