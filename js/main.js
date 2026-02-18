@@ -538,11 +538,11 @@ function formatBullets(text) {
                     pNum++;
                     currentP = createPage(pNum, ds);
                     container.appendChild(currentP);
-                    if (b.type === 'entry') {
-                         const contHeader = `<div class="section-title-wrapper"><div class="section-title" style="color:${ds.accent}; background-color:${ds.headerBg}; font-size:${ds.hSize}pt;">${b.title} <span style="font-size:0.7em; text-transform:none; opacity:0.6;">${i18n[lang].cont}</span></div></div>`;
-                         const d = document.createElement('div'); d.innerHTML = contHeader;
-                         currentP.querySelector('.page-content').appendChild(d);
-                    }
+                    //if (b.type === 'entry') {
+                    //     const contHeader = `<div class="section-title-wrapper"><div class="section-title" style="color:${ds.accent}; background-color:${ds.headerBg}; font-size:${ds.hSize}pt;">${b.title} <span style="font-size:0.7em; text-transform:none; opacity:0.6;">${i18n[lang].cont}</span></div></div>`;
+                    //     const d = document.createElement('div'); d.innerHTML = contHeader;
+                    //     currentP.querySelector('.page-content').appendChild(d);
+                    //}
                 }
                 const div = document.createElement('div'); div.innerHTML = contentHtml;
                 currentP.querySelector('.page-content').appendChild(div);
