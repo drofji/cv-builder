@@ -1,3 +1,23 @@
+/*
+  ==============================================================
+                         CV Builder
+  ==============================================================
+  Author: Alexander Wiese
+  Repository: https://github.com/drofji/cv-builder
+  Version: 2026.02
+  License: MIT
+  Description: Core JavaScript logic for CV Builder
+               Handles live preview, PDF export, ATS validation,
+               multi-language interface, JSON import/export.
+  ==============================================================
+  Note:
+  - Keep this header intact for project attribution.
+  - Forbidden characters, multi-caret editing, and export popup
+    logic are implemented here.
+  ==============================================================
+*/
+
+
 let isSaving = false;
 let isImporting = false;
 
