@@ -1,6 +1,6 @@
-# 📄 Modern CV Builder
+# 📄 CV Builder
 
-**Modern CV Builder** is an intuitive web tool for creating professional resumes in real time.  
+**CV Builder** is an intuitive web tool for creating professional resumes in real time.  
 No registration, no ads — just your data and a clean, ATS-compliant result.
 
 <a href="https://github.com/drofji/cv-builder/stargazers"><img src="https://img.shields.io/github/stars/drofji/cv-builder" alt="Stars Badge"/></a>
