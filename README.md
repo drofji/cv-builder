@@ -28,7 +28,7 @@ You can also try the ATS-safe demo import directly via URL:
 See changes instantly as you type.
 
 🌍 **Bilingual Interface**  
-Supports Russian and German (Deutsch) for creating international resumes.
+Supports English and German (Deutsch) for creating international resumes.
 
 💾 **Local Storage**  
 Your data is saved directly in your browser using IndexedDB.  
