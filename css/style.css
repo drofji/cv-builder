@@ -1,3 +1,23 @@
+/*
+  ==============================================================
+                           CV Builder
+  ==============================================================
+  Author: Alexander Wiese
+  Repository: https://github.com/drofji/cv-builder
+  Version: 2026.02
+  License: MIT
+  Description: ATS-compliant CV/Resume Builder styles
+               Includes responsive layout, typography, colors,
+               and design customization.
+  ==============================================================
+  Note:
+  - Keep this header intact for project attribution.
+  - Styles are optimized for single-column, ATS-friendly output.
+  - Only allowed fonts: Arial, Calibri, Helvetica, Georgia.
+  ==============================================================
+*/
+
+
 :root {
     --sidebar-width: 480px;
     --a4-width: 210mm;
