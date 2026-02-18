@@ -1,0 +1,80 @@
+{
+    "fn": "Lukas",
+    "ln": "Müller",
+    "job": "Senior Information Security & Infrastructure Architect",
+    "sum": "Strategic Information Security Leader with over 10 years of experience in designing resilient network architectures and implementing Zero Trust frameworks[cite: 7]. Expert in cloud security (AWS/Azure) and regulatory compliance (ISO 27001, GDPR)[cite: 8]. Proven track record of reducing infrastructure vulnerabilities by 60% through automated security auditing[cite: 9].",
+    "photo": "",
+    "original": "",
+    "lang": "en",
+    "contacts": [
+        { "t": "Email", "v": "l.mueller.sec@protonmail.com" },
+        { "t": "Phone", "v": "+49-176-555-9876" },
+        { "t": "Location", "v": "Berlin, Germany" },
+        { "t": "LinkedIn", "v": "linkedin.com/in/lukas-mueller-security" }
+    ],
+    "exp": [
+        {
+            "s": "2021-01-01",
+            "e": "",
+            "t": "Lead Security Infrastructure Engineer",
+            "o": "Deutsche Bank",
+            "d": "Leading the migration of core banking infrastructure to a secure multi-cloud environment [cite: 16].\nEstablished a company-wide DevSecOps culture by integrating automated security scanning (Python/Jenkins) into CI/CD pipelines [cite: 17].\nManaged a cross-functional team of 12 engineers and aligned security roadmaps with executive stakeholders [cite: 18].\nDirected quarterly risk assessments and technical audits to maintain ISO 27001 compliance for global operations[cite: 19]."
+        },
+        {
+            "s": "2018-05-01",
+            "e": "2020-12-31",
+            "t": "Senior Network Security Consultant",
+            "o": "T-Systems International",
+            "d": "Designed and deployed enterprise-level firewall solutions for Fortune 500 clients, optimizing infrastructure spend [cite: 21].\nReduced incident response time by 35% through the implementation of a centralized SIEM (Splunk) and custom Bash automation [cite: 22].\nAuthored technical security standards for IoT device integration in industrial environments[cite: 23]."
+        }
+    ],
+    "edu": [
+        {
+            "s": "2015-10-01",
+            "e": "2017-09-01",
+            "t": "Master of Science in Cybersecurity",
+            "o": "Technical University of Berlin (TU Berlin)",
+            "d": "Focus on Cryptography, Network Forensics, and Secure Software Development [cite: 34, 35].\nMaster's Thesis: 'Post-Quantum Cryptographic Protocols for Cloud Storage' (Grade: 1.1)[cite: 36]."
+        },
+        {
+            "s": "2011-09-01",
+            "e": "2015-07-01",
+            "t": "Bachelor of Science in Computer Science",
+            "o": "RWTH Aachen University",
+            "d": "Core subjects: Operating Systems, Data Structures, and Communication Networks[cite: 39, 40]."
+        }
+    ],
+    "cert": [
+        { "t": "CISSP - Certified Information Systems Security Professional", "o": "ISC²", "s": "2023-11-01", "e": "2026-11-01", "d": "Expertise in Asset Security and Software Development Security[cite: 47, 49]." },
+        { "t": "CCIE Security (Cisco Certified Internetwork Expert)", "o": "Cisco Systems", "s": "2022-05-01", "d": "Expert-level certification in complex network technologies[cite: 50, 53]." },
+        { "t": "CISM - Certified Information Security Manager", "o": "ISACA", "s": "2020-02-15", "d": "Focus on Information Security Governance and Incident Management[cite: 58, 60]." },
+        { "t": "AWS Certified Security – Specialty", "o": "Amazon Web Services", "s": "2021-08-01", "d": "Expertise in securing AWS environments[cite: 55, 57]." }
+    ],
+    "proj": [
+        {
+            "s": "2022-06-01",
+            "e": "2022-12-01",
+            "t": "Zero Trust Migration Project",
+            "o": "Financial Sector Implementation",
+            "d": "Replaced legacy VPN with ZTNA (Terraform-based deployment) for 5,000+ remote employees without downtime[cite: 28, 29]."
+        }
+    ],
+    "skills": [
+        { "n": "ISO 27001, SOC2, GDPR Compliance, Risk Management", "t": "method" },
+        { "n": "Zero Trust (ZTNA), Multi-Cloud Security (AWS/Azure), DevSecOps", "t": "tech" },
+        { "n": "Palo Alto, Fortinet, Splunk (SIEM), Terraform", "t": "tools" },
+        { "n": "Python, Bash, PowerShell (Security Automation)", "t": "tech" },
+        { "n": "Stakeholder Management, Team Leadership (12+ staff), IT Governance", "t": "management" }
+    ],
+    "ds": {
+        "size": "10.5",
+        "hSize": "14.5",
+        "pSize": "35",
+        "accent": "#1a1a1a",
+        "text": "#333333",
+        "headerBg": "#f8f9fa",
+        "dOrder": "MY_TEXT",
+        "dSep": " ",
+        "showPhoto": false
+    }
+}
